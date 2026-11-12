@@ -65,6 +65,8 @@ it('analyses the game: evaluation list from white, bar following the current mov
   await userEvent.click(screen.getByRole('button', { name: 'Analizar' }));
 
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Analizar' })).toBeNull());
+  // With the book loaded these moves are "book", a badge without text; before it they get a textual one.
+  await screen.findByText(/King's Knight Opening/);
   const rows = within(screen.getByRole('list', { name: 'Jugadas' })).getAllByRole('listitem');
   expect(rows.map((r) => minus(r.textContent))).toEqual(['1.e4-0,3e5+0,3', '2.Nf3-0,1']);
   expect(screen.queryByRole('button', { name: 'Analizar' })).toBeNull();
