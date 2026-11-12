@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { analyseGame, winPercent } from './analysis.ts';
+import { analyseGame, type PositionEval, winPercent } from './analysis.ts';
 import { DEFAULT_DEPTH, type Engine, EngineError, type Eval } from './engine/engine.ts';
 import { FakeEngine } from './engine/FakeEngine.ts';
 
@@ -10,6 +10,7 @@ const STALEMATE = '7k/5Q2/6K1/8/8/8/8/8 b - - 0 1';
 const BARE_KINGS = '8/8/8/4k3/8/3K4/8/8 w - - 0 1';
 
 const ev = (score: Eval['score']): Eval => ({ score, bestMove: 'e2e4', depth: 10, pv: [] });
+const scoresOf = (evals: PositionEval[]) => evals.map((e) => e.score);
 
 describe('winPercent', () => {
   it('is 50 at equality and follows the lichess curve', () => {
@@ -39,7 +40,7 @@ describe('analyseGame', () => {
       [WHITE_TO_MOVE]: ev({ kind: 'cp', cp: 20 }),
       [BLACK_TO_MOVE]: ev({ kind: 'cp', cp: 30 }),
     });
-    expect(await analyseGame(engine, [WHITE_TO_MOVE, BLACK_TO_MOVE])).toEqual([
+    expect(scoresOf(await analyseGame(engine, [WHITE_TO_MOVE, BLACK_TO_MOVE]))).toEqual([
       { kind: 'cp', cp: 20 },
       { kind: 'cp', cp: -30 },
     ]);
@@ -47,12 +48,12 @@ describe('analyseGame', () => {
 
   it('flips mate scores too', async () => {
     const engine = new FakeEngine({ [BLACK_TO_MOVE]: ev({ kind: 'mate', mate: 2 }) });
-    expect(await analyseGame(engine, [BLACK_TO_MOVE])).toEqual([{ kind: 'mate', mate: -2 }]);
+    expect(scoresOf(await analyseGame(engine, [BLACK_TO_MOVE]))).toEqual([{ kind: 'mate', mate: -2 }]);
   });
 
   it('resolves finished positions without asking the engine', async () => {
     const engine = new FakeEngine({});
-    expect(await analyseGame(engine, [MATED_WHITE, STALEMATE, BARE_KINGS])).toEqual([
+    expect(scoresOf(await analyseGame(engine, [MATED_WHITE, STALEMATE, BARE_KINGS]))).toEqual([
       { kind: 'final', winner: 'black' },
       { kind: 'final', winner: null },
       { kind: 'final', winner: null },
@@ -60,18 +61,26 @@ describe('analyseGame', () => {
     expect(engine.calls).toEqual([]);
   });
 
-  it('reports the scores so far after each position, as copies, finished positions included', async () => {
+  it('keeps the best line and the second score, from white, and falls back to the best move without a line', async () => {
+    const engine = new FakeEngine({
+      [WHITE_TO_MOVE]: { ...ev({ kind: 'cp', cp: 20 }), pv: ['d2d4', 'd7d5'], second: { kind: 'cp', cp: -5 } },
+      [BLACK_TO_MOVE]: { ...ev({ kind: 'cp', cp: 30 }), bestMove: 'e7e5', second: { kind: 'mate', mate: -4 } },
+    });
+    expect(await analyseGame(engine, [WHITE_TO_MOVE, BLACK_TO_MOVE, MATED_WHITE])).toEqual([
+      { score: { kind: 'cp', cp: 20 }, pv: ['d2d4', 'd7d5'], second: { kind: 'cp', cp: -5 } },
+      { score: { kind: 'cp', cp: -30 }, pv: ['e7e5'], second: { kind: 'mate', mate: 4 } },
+      { score: { kind: 'final', winner: 'black' }, pv: [] },
+    ]);
+  });
+
+  it('reports the evaluations so far after each position, as copies, finished positions included', async () => {
     const engine = new FakeEngine({ [WHITE_TO_MOVE]: ev({ kind: 'cp', cp: 0 }) });
     const onProgress = vi.fn();
     await analyseGame(engine, [WHITE_TO_MOVE, MATED_WHITE], { onProgress });
+    const first = { score: { kind: 'cp', cp: 0 }, pv: ['e2e4'] };
     expect(onProgress.mock.calls).toEqual([
-      [[{ kind: 'cp', cp: 0 }]],
-      [
-        [
-          { kind: 'cp', cp: 0 },
-          { kind: 'final', winner: 'black' },
-        ],
-      ],
+      [[first]],
+      [[first, { score: { kind: 'final', winner: 'black' }, pv: [] }]],
     ]);
   });
 

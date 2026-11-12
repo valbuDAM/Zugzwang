@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MOVE_LABELS } from '../domain/classify.ts';
 import { formatNumber } from '../i18n/format.ts';
 import { Board } from '../ui/Board.tsx';
 import { EvalBar } from '../ui/EvalBar.tsx';
-import { MOVE_LABELS, MoveBadge } from '../ui/MoveBadge.tsx';
+import { MoveBadge } from '../ui/MoveBadge.tsx';
 import './styleguide.css';
 
 const FEN = '8/8/8/4k3/8/4K3/4P3/8 w - - 0 1';

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { analyseGame, type WhiteScore, winPercent } from '../domain/analysis.ts';
+import { analyseGame, type PositionEval, winPercent } from '../domain/analysis.ts';
 import { readAnalysis, writeAnalysis } from '../domain/analysisCache.ts';
 import { type Engine, EngineLoadError } from '../domain/engine/engine.ts';
 import type { Variant } from '../domain/engine/variant.ts';
@@ -18,10 +18,10 @@ import './GameViewer.css';
 
 type Analysis =
   | { status: 'idle' }
-  // `scores` is the part of the game analysed so far, always from the first position on.
-  | { status: 'running'; scores: WhiteScore[]; variant: Variant }
-  // `variant` is the engine that produced the scores: the deep mode can fall back to lite (ADR-029).
-  | { status: 'done'; scores: WhiteScore[]; variant: Variant; fellBack?: boolean }
+  // `evals` is the part of the game analysed so far, always from the first position on.
+  | { status: 'running'; evals: PositionEval[]; variant: Variant }
+  // `variant` is the engine that produced the evals: the deep mode can fall back to lite (ADR-029).
+  | { status: 'done'; evals: PositionEval[]; variant: Variant; fellBack?: boolean }
   | { status: 'error'; engineLoad: boolean };
 
 type Props = {
@@ -80,7 +80,7 @@ function Viewer({
         if (stale) return;
         setAnalysis((a) => {
           if (a.status === 'running') return a;
-          if (saved) return { status: 'done', scores: saved, variant: active };
+          if (saved) return { status: 'done', evals: saved, variant: active };
           return a.status === 'idle' ? a : { status: 'idle' };
         });
       });
@@ -120,9 +120,12 @@ function Viewer({
   // Leaving the page aborts the analysis: the engine stops, is released by `analyse`, and nothing more is shown.
   useEffect(() => () => analysisAbort.current?.abort(), []);
 
+  const evals = analysis.status === 'running' || analysis.status === 'done' ? analysis.evals : undefined;
+  // Same array between renders: the move list is memoized on it.
+  const scores = useMemo(() => evals?.map((e) => e.score), [evals]);
+
   if (!positions) return <p role="alert">{t('game.invalid')}</p>;
   const current = positions[ply];
-  const scores = analysis.status === 'running' || analysis.status === 'done' ? analysis.scores : undefined;
   const currentScore = scores?.[ply];
   // The first position is the start, not a move: "move N of M" counts the moves analysed.
   const moves = Math.max(0, (scores?.length ?? 0) - 1);
@@ -140,15 +143,15 @@ function Viewer({
   const analyse = async () => {
     const abort = new AbortController();
     analysisAbort.current = abort;
-    setAnalysis({ status: 'running', scores: [], variant: active });
+    setAnalysis({ status: 'running', evals: [], variant: active });
     const run = async (engine: Engine, used: Variant, fellBack: boolean) => {
       try {
         const result = await analyseGame(engine, fens, {
           depth,
           signal: abort.signal,
-          onProgress: (so) => setAnalysis({ status: 'running', scores: so, variant: used }),
+          onProgress: (so) => setAnalysis({ status: 'running', evals: so, variant: used }),
         });
-        setAnalysis({ status: 'done', scores: result, variant: used, ...(fellBack && { fellBack }) });
+        setAnalysis({ status: 'done', evals: result, variant: used, ...(fellBack && { fellBack }) });
         void writeAnalysis(fens, { variant: used, depth }, result);
       } finally {
         engine.dispose();

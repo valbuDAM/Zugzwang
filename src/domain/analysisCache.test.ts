@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { clear, get, set } from 'idb-keyval';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { WhiteScore } from './analysis.ts';
+import type { PositionEval } from './analysis.ts';
 import { readAnalysis, writeAnalysis } from './analysisCache.ts';
 
 vi.mock('idb-keyval', async (importOriginal) => {
@@ -10,10 +10,10 @@ vi.mock('idb-keyval', async (importOriginal) => {
 });
 
 const FENS = ['fen-0', 'fen-1', 'fen-2'];
-const SCORES: WhiteScore[] = [
-  { kind: 'cp', cp: 20 },
-  { kind: 'mate', mate: -3 },
-  { kind: 'final', winner: 'black' },
+const SCORES: PositionEval[] = [
+  { score: { kind: 'cp', cp: 20 }, pv: ['e2e4'], second: { kind: 'cp', cp: 5 } },
+  { score: { kind: 'mate', mate: -3 }, pv: ['d8h4'] },
+  { score: { kind: 'final', winner: 'black' }, pv: [] },
 ];
 const SETTINGS = { variant: 'lite-single', depth: 12 } as const;
 
