@@ -50,6 +50,15 @@ it('renders the title and a labelled user form on /', () => {
   expect(screen.getByLabelText('Usuario de chess.com')).toBeInTheDocument();
 });
 
+it('shows the zugzwang position on / and opens its game in the viewer', async () => {
+  render(<App />);
+  expect(screen.getByRole('img', { name: /en zugzwang/ })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Ver esta partida' }));
+  expect(window.location.pathname).toBe('/pgn');
+  expect(screen.getByRole('heading', { name: 'Sämisch contra Nimzowitsch' })).toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('Jugada 0 de 50');
+});
+
 it('goes to /u/:user and lists the newest month on submit', async () => {
   render(<App />);
   await userEvent.type(screen.getByLabelText('Usuario de chess.com'), ' hikaru {Enter}');

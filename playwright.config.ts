@@ -14,7 +14,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
-  use: { baseURL: `http://localhost:${PORT}`, trace: 'on-first-retry' },
+  // Dark unless a test asks for light: the app follows the system, and Playwright's default is light.
+  use: { baseURL: `http://localhost:${PORT}`, trace: 'on-first-retry', colorScheme: 'dark' },
   webServer: {
     command: `vite build && vite preview --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,

@@ -1,0 +1,75 @@
+.move-panel {
+  display: grid;
+  gap: var(--space-2);
+  /* The better move and the button that shows its line share a row: two rows at most until the line is opened. */
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.move-panel > * {
+  grid-column: 1 / -1;
+}
+
+.move-panel > .move-panel-best {
+  grid-column: 1;
+}
+
+.move-panel > button {
+  grid-column: 2;
+}
+
+.move-panel-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.move-panel-label span:last-child {
+  color: var(--color-text-muted);
+}
+
+.move-panel-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.move-panel-line li {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.move-panel-line li[aria-current="step"] {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.move-panel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.move-panel button {
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-inlay) solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-weight: 700;
+}
+
+.move-panel button:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 40rem), (pointer: coarse) {
+  .move-panel button {
+    min-block-size: var(--target-touch);
+  }
+}

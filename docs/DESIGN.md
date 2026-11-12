@@ -58,6 +58,14 @@ Componente: `src/ui/MoveBadge.tsx` (`role="img"` con el nombre como etiqueta acc
 - Radios: `--radius-sm` 2 px (barra de evaluación), `--radius-md` 6 px (paneles, botones), `--radius-round` (insignias).
 - `--border-inlay` 2 px: el filete de latón (marcos, foco, separador del héroe).
 
+## Disposición
+
+- `--page-wide` 80rem: ancho de la portada y de la página de una partida. El resto de páginas se queda en `--measure`.
+- **Portada:** la marca y las dos entradas (usuario, PGN) a la izquierda; a la derecha, la mesa del club (marco de madera, filete de latón, tapete) con la posición final de Sämisch – Nimzowitsch, 1923, la partida del «zugzwang inmortal», que además se puede abrir en el visor.
+- **Partida (≥ 64rem):** dos columnas sobre el tapete. A la izquierda el tablero, que se queda fijo al desplazar y nunca pasa de `--board-max` (44rem) ni del alto de la ventana; a la derecha, los datos de la partida y la planilla (`--color-surface`, mínimo `--side-min` 22rem) con todo el análisis: precisión, apertura, gráfico, jugada actual, lista de jugadas y recuento de etiquetas. Por debajo de 64rem, lo mismo en una columna.
+- La precisión va en dos placas con los colores de la barra de evaluación (clara para las blancas, oscura para las negras).
+- Sobre el tapete no se usa el latón para texto ni bordes de botones: en el tema claro es demasiado oscuro. Se usan `--color-on-felt` y `--color-on-felt-muted`.
+
 ## Movimiento
 
 - `--duration-fast` 120 ms (hover) · `--duration-base` 220 ms (aparición de insignias) · `--duration-slow` 420 ms (barra de evaluación).

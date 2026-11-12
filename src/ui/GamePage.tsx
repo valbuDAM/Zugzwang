@@ -35,7 +35,7 @@ export function GamePage({ user, id }: { user: string; id: string }) {
   }, [user, id, attempt]);
 
   return (
-    <main className="page">
+    <main className="page page-wide">
       <h1>{user}</h1>
       <Link href={`/u/${encodeURIComponent(user)}${window.location.search}`}>{t('gamePage.back')}</Link>
       {state.status === 'loading' && <p role="status">{t('gamePage.loading')}</p>}
@@ -48,9 +48,8 @@ export function GamePage({ user, id }: { user: string; id: string }) {
 
 function GameSummary({ game, user }: { game: Game; user: string }) {
   const { t } = useTranslation();
-  return (
-    <section className="game-summary" aria-labelledby="game-summary-title">
-      <h2 id="game-summary-title">{t('gamePage.title', { white: game.white.username, black: game.black.username })}</h2>
+  const details = (
+    <>
       <p className="game-summary-meta">{formatDate(game.endTime * 1000)}</p>
       <ul className="game-summary-players">
         {(['white', 'black'] as const).map((side) => (
@@ -64,10 +63,20 @@ function GameSummary({ game, user }: { game: Game; user: string }) {
       <p className="game-summary-result">
         {t('user.result')}: <strong>{outcome(game)}</strong>
       </p>
+    </>
+  );
+  return (
+    <section className="game-summary" aria-labelledby="game-summary-title">
+      <h2 id="game-summary-title">{t('gamePage.title', { white: game.white.username, black: game.black.username })}</h2>
       {isStandard(game.variant) ? (
-        <GameViewer pgn={game.pgn} orientation={playerView(game, user).color} />
+        <GameViewer pgn={game.pgn} orientation={playerView(game, user).color}>
+          {details}
+        </GameViewer>
       ) : (
-        <p role="alert">{t('gamePage.unsupported', { variant: variantName(t, game.variant as string) })}</p>
+        <>
+          {details}
+          <p role="alert">{t('gamePage.unsupported', { variant: variantName(t, game.variant as string) })}</p>
+        </>
       )}
     </section>
   );

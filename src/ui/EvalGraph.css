@@ -1,0 +1,50 @@
+.eval-graph {
+  overflow: hidden;
+  border: var(--border-inlay) solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-eval-black);
+  cursor: pointer;
+}
+
+.eval-graph svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.eval-graph-white {
+  fill: var(--color-eval-white);
+}
+
+.eval-graph-middle {
+  stroke: var(--color-accent);
+  stroke-dasharray: 4 4;
+}
+
+.eval-graph-current {
+  stroke: var(--color-focus);
+  stroke-width: 2;
+}
+
+.eval-graph-dot {
+  stroke: var(--color-eval-black);
+  fill: var(--dot);
+}
+
+.eval-graph-dot[data-label="brilliant"] {
+  --dot: var(--color-label-brilliant);
+}
+.eval-graph-dot[data-label="great"] {
+  --dot: var(--color-label-great);
+}
+.eval-graph-dot[data-label="inaccuracy"] {
+  --dot: var(--color-label-inaccuracy);
+}
+.eval-graph-dot[data-label="mistake"] {
+  --dot: var(--color-label-mistake);
+}
+.eval-graph-dot[data-label="blunder"] {
+  --dot: var(--color-label-blunder);
+}
+.eval-graph-dot[data-label="miss"] {
+  --dot: var(--color-label-miss);
+}

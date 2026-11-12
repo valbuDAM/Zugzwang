@@ -1,0 +1,63 @@
+.analysis-summary {
+  animation: enter var(--duration-slow) var(--ease-out);
+}
+
+.analysis-summary-accuracy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+/* One plate per side in the colours of the evaluation bar, so which side is which needs no reading. */
+.analysis-summary-accuracy span {
+  display: grid;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-inlay) solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-eval-white);
+  color: var(--color-eval-black);
+  font-size: var(--text-sm);
+}
+
+.analysis-summary-accuracy span[data-side="black"] {
+  background: var(--color-eval-black);
+  color: var(--color-eval-white);
+}
+
+.analysis-summary-accuracy strong {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-tight);
+}
+
+.label-counts {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.label-counts th,
+.label-counts td {
+  padding: var(--space-1) var(--space-2);
+  text-align: end;
+}
+
+.label-counts th:first-child {
+  padding-inline-start: 0;
+  text-align: start;
+}
+
+.label-counts th[scope="row"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+}
+
+.label-counts thead th {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
