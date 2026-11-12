@@ -270,3 +270,16 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
 - **Descartado:** el full de un hilo (otro hash, tamaño y `.js` para un caso casi inexistente con COOP/COEP en Pages); pasar la URL de unpkg al Worker (dependería de la caché HTTP, que puede expulsar 99 MB); `fetch` con `integrity` (sin comprobar que deje ver el progreso); rehacer el hash en cada carga; `navigator.storage.persist()` (Firefox pide permiso); un interruptor en `localStorage` (dos estados que sincronizar).
 - **Comprobado en Chromium sin ventana (12 núcleos, 16 GB):** el `blob:` carga con COEP y con hilos, también revocado antes de crearlos; hash correcto; `uciok` en 1,2–1,3 s; 0 peticiones a unpkg tras recargar. 80 posiciones a profundidad 16: 97 s con full frente a 70 s con lite. Memoria máxima de todo el navegador: 1044 MB frente a 548 MB.
 - **Consecuencias:** un equipo modesto puede pasar de los 10 s de arranque y acabar en lite con aviso. Firefox, WebKit y equipos modestos quedan sin medir. Tras subir de versión, la copia vieja ocupa espacio hasta la siguiente descarga.
+
+### ADR-030 · Recta final simplificada
+- **Contexto:** 73 PR para llegar a M4; buena parte eran PR solo de roadmap y cierres de hito. Quedaban 15 tareas.
+- **Decisión:**
+  - M5–M7 se hacen en tres PR: R1 dominio del análisis, R2 interfaz + tema claro + animaciones, R3 lanzamiento. Se levanta para ellos el límite de ~400 líneas de ADR-015.
+  - El roadmap se actualiza dentro del PR de código. Un solo cierre (auditoría, deuda, mutación, navegadores) antes de v1.0, no uno por hito.
+  - Sin cambio de modelo, esfuerzo ni advisor por tarea (sustituye a esa parte de ADR-018).
+  - Fuera de v1.0, al backlog: momentos clave con la tecla `N` (ADR-014), el repaso de diseño de los estados de error y el pase manual con NVDA. Cancelado el rendimiento estimado (ADR-013).
+  - Precisión: se incluye el `+1` («uncertainty bonus») que lichess suma a la precisión de cada jugada y que ADR-011 no recogía.
+  - Aperturas: los nombres se muestran en inglés, como en el conjunto de datos; no hay traducción fiable de ~3500 nombres.
+  - «Gran jugada» exige que la jugada sea la PV1 y que la segunda línea sea de la misma profundidad. «Brillante» mide el material con el balance de ambos bandos tras la jugada y tres medias jugadas de la PV.
+- **Se mantiene:** `verifier` en verde, `ponytail-review`, CI obligatoria y squash merge por la usuaria.
+- **Consecuencias:** PR más grandes y más difíciles de revisar; a cambio, tres en vez de quince más sus PR de roadmap.

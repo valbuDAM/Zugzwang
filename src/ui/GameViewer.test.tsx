@@ -244,12 +244,11 @@ describe('analysis cache', () => {
   const cacheSettings = () => ({ variant: 'lite-single', depth: detectSettings('lite-single').depth }) as const;
 
   it('shows a saved analysis on opening, without starting the engine', async () => {
-    await writeAnalysis(fens, cacheSettings(), [
-      { kind: 'cp', cp: 20 },
-      { kind: 'cp', cp: -30 },
-      { kind: 'cp', cp: 25 },
-      { kind: 'cp', cp: -10 },
-    ]);
+    await writeAnalysis(
+      fens,
+      cacheSettings(),
+      [20, -30, 25, -10].map((cp) => ({ score: { kind: 'cp' as const, cp }, pv: [] })),
+    );
     const makeEngine = vi.fn(() => scriptedEngine());
 
     render(<GameViewer pgn={PGN} variant="lite-single" makeEngine={makeEngine} />);

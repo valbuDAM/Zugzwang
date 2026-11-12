@@ -8,6 +8,15 @@ export type FinalScore = { kind: 'final'; winner: 'white' | 'black' | null };
 /** Evaluation from white's point of view. */
 export type WhiteScore = Score | FinalScore;
 
+/** What the engine found in one position, from white's point of view. */
+export type PositionEval = {
+  score: WhiteScore;
+  /** Best line in UCI, best move first; empty when the game is over here. */
+  pv: string[];
+  /** Score of the second-best move, when the engine reported one. */
+  second?: Score;
+};
+
 const CAP = 1000;
 const clamp = (cp: number) => Math.max(-CAP, Math.min(CAP, cp));
 const lichessCurve = (cp: number) => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * clamp(cp))) - 1);
@@ -34,8 +43,8 @@ type Options = {
   depth?: number;
   /** Aborting stops the engine and rejects with an `AbortError`; nothing of this analysis is reported afterwards. */
   signal?: AbortSignal;
-  /** The scores so far (a copy): always a prefix of the game, in order. */
-  onProgress?: (scores: WhiteScore[]) => void;
+  /** The evaluations so far (a copy): always a prefix of the game, in order. */
+  onProgress?: (evals: PositionEval[]) => void;
 };
 
 /** Analyses the positions in series; rejects at the first engine failure or when aborted. */
@@ -43,7 +52,7 @@ export async function analyseGame(
   engine: Engine,
   fens: string[],
   { depth = DEFAULT_DEPTH, signal, onProgress }: Options = {},
-): Promise<WhiteScore[]> {
+): Promise<PositionEval[]> {
   // The engine may have answered just before the abort: check again after every `await`.
   const checkAborted = () => {
     if (signal?.aborted) throw abortError();
@@ -52,14 +61,23 @@ export async function analyseGame(
   const stop = () => engine.stop();
   signal?.addEventListener('abort', stop, { once: true });
   try {
-    const scores: WhiteScore[] = [];
+    const evals: PositionEval[] = [];
     for (const fen of fens) {
-      const score = finalScore(fen) ?? toWhite((await engine.analyse(fen, { depth })).score, fen);
+      const final = finalScore(fen);
+      const found = final ? undefined : await engine.analyse(fen, { depth });
       checkAborted();
-      scores.push(score);
-      onProgress?.([...scores]);
+      evals.push(
+        found
+          ? {
+              score: toWhite(found.score, fen),
+              pv: found.pv.length ? found.pv : [found.bestMove],
+              ...(found.second && { second: toWhite(found.second, fen) }),
+            }
+          : { score: final as FinalScore, pv: [] },
+      );
+      onProgress?.([...evals]);
     }
-    return scores;
+    return evals;
   } finally {
     signal?.removeEventListener('abort', stop);
   }

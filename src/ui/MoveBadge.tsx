@@ -1,19 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { MoveLabel } from '../domain/classify.ts';
 import './MoveBadge.css';
-
-export const MOVE_LABELS = [
-  'brilliant',
-  'great',
-  'best',
-  'good',
-  'book',
-  'inaccuracy',
-  'mistake',
-  'blunder',
-  'miss',
-] as const;
-export type MoveLabel = (typeof MOVE_LABELS)[number];
 
 const icon = (d: string, filled = false) => (
   <svg

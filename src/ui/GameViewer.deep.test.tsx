@@ -16,7 +16,7 @@ import { GameViewer } from './GameViewer.tsx';
 
 const PGN = '1. e4 e5 2. Nf3 *';
 const fens = parseGamePgn(PGN).map((p) => p.fen);
-const scores = [20, -30, 25, -10].map((cp) => ({ kind: 'cp' as const, cp }));
+const scores = [20, -30, 25, -10].map((cp) => ({ score: { kind: 'cp' as const, cp }, pv: [] }));
 const settings = (variant: Variant) => ({ variant, depth: detectSettings(variant).depth });
 const ev = (cp: number): Eval => ({ score: { kind: 'cp', cp }, bestMove: 'e2e4', depth: 10, pv: [] });
 const scripted = (options?: { latency: number }) =>
