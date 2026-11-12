@@ -185,3 +185,16 @@ test('/pgn with nothing pasted goes back home', async ({ page }) => {
   await page.goto('/pgn');
   await expect(page).toHaveURL('/');
 });
+
+test('the about page credits the engine and has no serious a11y violations', async ({
+  page,
+  expectNoSeriousA11yViolations,
+}) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Acerca de' }).click();
+  await expect(page).toHaveURL('/acerca');
+  await expect(page.getByRole('link', { name: /Stockfish 19/ })).toBeVisible();
+  await expectNoSeriousA11yViolations();
+  await page.getByRole('button', { name: 'Modo claro' }).click();
+  await expectNoSeriousA11yViolations();
+});

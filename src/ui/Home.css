@@ -204,3 +204,10 @@
     padding-inline: var(--space-2); /* the board takes the width the card padding would waste */
   }
 }
+
+.about-credits {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}

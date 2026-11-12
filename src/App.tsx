@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Route, Switch } from 'wouter';
+import { Link, Route, Switch } from 'wouter';
+import { About } from './ui/About.tsx';
 import { GamePage } from './ui/GamePage.tsx';
 import { Home } from './ui/Home.tsx';
 import { PastedGamePage } from './ui/PastedGamePage.tsx';
@@ -29,9 +30,11 @@ function ThemeToggle() {
 }
 
 export function App() {
+  const { t } = useTranslation();
   return (
     <>
       <header className="app-bar">
+        <Link href="/acerca">{t('about.title')}</Link>
         <ThemeToggle />
       </header>
       <Switch>
@@ -39,6 +42,7 @@ export function App() {
         <Route path="/u/:user">{({ user }) => <UserPage key={user} user={user} />}</Route>
         <Route path="/u/:user/:gameId">{({ user, gameId }) => <GamePage user={user} id={gameId} />}</Route>
         <Route path="/pgn" component={PastedGamePage} />
+        <Route path="/acerca" component={About} />
         <Route component={Home} />
       </Switch>
     </>

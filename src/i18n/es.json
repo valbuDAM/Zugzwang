@@ -3,6 +3,14 @@
     "title": "Zugzwang",
     "lightMode": "Modo claro"
   },
+  "about": {
+    "title": "Acerca de",
+    "what": "Zugzwang analiza tus partidas de chess.com con Stockfish dentro de tu navegador. Ninguna partida sale de tu equipo: no hay servidor de análisis.",
+    "licence": "Es software libre bajo la licencia GPL-3.0. El código fuente está en",
+    "accuracy": "La precisión y el porcentaje de victoria siguen las fórmulas públicas de lichess. Las etiquetas de las jugadas son propias y orientativas.",
+    "credits": "Hecho con",
+    "sounds": "Los sonidos se sintetizan en el navegador; no se usa ninguna grabación."
+  },
   "home": {
     "lead": "Analiza tus partidas de chess.com con Stockfish, sin salir del navegador.",
     "userLabel": "Usuario de chess.com",

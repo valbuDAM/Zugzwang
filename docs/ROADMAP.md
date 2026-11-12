@@ -1,6 +1,6 @@
 ﻿# Roadmap — Zugzwang
 
-▶ Siguiente tarea: R3 (lanzamiento v1.0)
+▶ Siguiente tarea: v1.0 (publicar: pasos de la usuaria)
 
 ## Notas de traspaso (tarea en curso)
 
@@ -24,6 +24,8 @@
   - Tema: `src/ui/theme.ts` + botón «Modo claro» en `App` (sigue al sistema hasta que se elige; se guarda en `localStorage`). Playwright corre en oscuro salvo `report.spec.ts`, que prueba el claro con axe.
   - Animaciones: `@keyframes enter` en `base.css` para cada pantalla (`main`) y para el resumen; con `prefers-reduced-motion` las duraciones son 0.
 - **Límites de R2:** la barra sigue mostrando el mate como «#3», no «M3»; sin transición animada entre pantallas más allá de la entrada; el gráfico no se ha visto con partidas de 300 jugadas; no probado con lector de pantalla real; skill `frontend-design` no disponible en la sesión que lo hizo.
+- **Entregado en R3:** `README.md` con atribuciones, página «Acerca de» (`/acerca`, enlazada desde la barra) con el código fuente y la versión exacta del motor, versión `1.0.0` en `package.json`. `ponytail-debt`: 12 marcadores `shortcut:`, todos con límite y cuándo mejorarlo.
+- **Navegadores, en este equipo (Windows):** Chromium y móvil en verde (69 e2e). Firefox no arranca (`spawn UNKNOWN` al lanzar `firefox.exe`). En WebKit fallan los tests que usan el motor real (el Worker da error) y el de teclado pierde la primera pulsación; las dos cosas pasan igual en `main`, así que no vienen de R1–R3, pero el pase de verdad queda para el job manual de la CI (Linux), donde antes pasaban.
 - **Deuda aceptada, sigue en pie:**
   - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`. Sin comprobar que producción sirva el `.wasm` como `application/wasm` ni `crossOriginIsolated` en Cloudflare: mirarlo en R3.
   - Hallazgos de auditoría sin tarea: `UserPage` sigue descargando meses al salir y `?months=999` carga todo el historial; «Cargar mes anterior» puede pisar la lista si se cambia de mes mientras carga; `findGame` baja meses sin cancelar; un solo timeout de 15 s para petición y cuerpo; `new Worker` que lanza síncrono con el motor full no vuelve a lite; `cachedWasm` no revalida el hash; `moveCount` se recalcula en cada render de `GameCard`; código sin uso (`movetime`, `Game.rated`).
@@ -72,13 +74,21 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 **Tests:** C · E + axe (dos temas, reduced-motion).
 **Skills:** frontend-design.
 
-### R3 · Lanzamiento v1.0 — `pendiente`
+### R3 · Lanzamiento v1.0 — `en review`
 **Objetivo:** cumplir la GPL y publicar.
 - README (qué es, cómo ejecutarlo, licencia) y atribuciones: Stockfish, chessground, chessops, chess-openings, piezas y fuentes.
 - Página «Acerca de» con enlace al código fuente y a la versión exacta del motor.
 - e2e en Firefox y WebKit (job manual de CI) con sus correcciones.
 - Cierre único: `ponytail-audit`, `ponytail-debt`, `npm run mutate` (≥ 80 % en `src/domain/`), `.wasm` y `crossOriginIsolated` comprobados en producción, etiqueta `v1.0.0`.
-**Pendiente de la usuaria:** lanzar el job manual de navegadores, squash merge y `/usage`.
+**Sin hacer en R3:** `ponytail-audit` de todo el repo y el pase de Firefox/WebKit en la CI (cuenta de GitHub bloqueada).
+
+### v1.0 · Publicar — `pendiente` (pasos de la usuaria)
+1. Desbloquear la cuenta de GitHub (ticket de facturación) y relanzar la CI de los PR #75, #76 y el de R3.
+2. Squash merge en orden: R1, R2, R3 (cada uno se reapunta a `main` al fusionar el anterior).
+3. Lanzar el job manual de CI con todos los navegadores (`all_browsers`) sobre `main` y corregir lo que salga.
+4. En producción: comprobar que `/engine/stockfish-19-lite-single.wasm` se sirve como `application/wasm` y que `crossOriginIsolated` es `true`.
+5. `git tag v1.0.0 && git push origin v1.0.0`.
+6. Opcional: `ponytail-audit` y revisar `/usage`.
 
 ---
 
