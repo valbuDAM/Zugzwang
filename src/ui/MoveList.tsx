@@ -1,8 +1,10 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WhiteScore } from '../domain/analysis.ts';
+import type { MoveLabel } from '../domain/classify.ts';
 import type { Position } from '../domain/pgn.ts';
 import { formatClock, formatEval } from '../i18n/format.ts';
+import { MoveBadge } from './MoveBadge.tsx';
 import './MoveList.css';
 
 // Scrolls only the list, never the page, and only when the move is out of view. Stable identity: React
@@ -25,12 +27,14 @@ const scrollSoon = (el: HTMLButtonElement | null) => {
 const Move = memo(function Move({
   position,
   score,
+  label,
   current,
   ply,
   onSelect,
 }: {
   position: Position;
   score: WhiteScore | undefined;
+  label: MoveLabel | null | undefined;
   current: boolean;
   ply: number;
   onSelect: (ply: number) => void;
@@ -43,6 +47,7 @@ const Move = memo(function Move({
       onClick={() => onSelect(ply)}
     >
       <span>{position.san}</span>
+      {label && <MoveBadge label={label} />}
       {position.clock !== null && <small>{formatClock(position.clock)}</small>}
       {score && <strong>{formatEval(score)}</strong>}
     </button>
@@ -53,18 +58,22 @@ export function MoveList({
   positions,
   ply,
   scores,
+  labels,
   onSelect,
 }: {
   positions: Position[];
   ply: number;
   scores?: WhiteScore[] | undefined;
+  labels?: (MoveLabel | null)[] | undefined;
   onSelect: (ply: number) => void;
 }) {
   const { t } = useTranslation();
 
   const move = (n: number) => {
     const p = positions[n];
-    return p && <Move position={p} score={scores?.[n]} current={ply === n} ply={n} onSelect={onSelect} />;
+    return (
+      p && <Move position={p} score={scores?.[n]} label={labels?.[n]} current={ply === n} ply={n} onSelect={onSelect} />
+    );
   };
 
   const pairs = Array.from({ length: Math.ceil((positions.length - 1) / 2) }, (_, i) => i + 1);

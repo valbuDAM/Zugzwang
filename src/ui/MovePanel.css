@@ -1,0 +1,69 @@
+.move-panel {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text); /* not the felt's text colour it would inherit */
+}
+
+.move-panel p {
+  margin: 0;
+}
+
+.move-panel-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.move-panel-label span:last-child {
+  color: var(--color-text-muted);
+}
+
+.move-panel-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.move-panel-line li {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.move-panel-line li[aria-current="step"] {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.move-panel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.move-panel button {
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-inlay) solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-weight: 700;
+}
+
+.move-panel button:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 40rem), (pointer: coarse) {
+  .move-panel button {
+    min-block-size: var(--target-touch);
+  }
+}

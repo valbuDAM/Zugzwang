@@ -87,3 +87,8 @@
   inline-size: 100%;
   accent-color: var(--color-accent);
 }
+
+.game-viewer-opening {
+  margin: 0 0 var(--space-2);
+  color: var(--color-on-felt-muted);
+}

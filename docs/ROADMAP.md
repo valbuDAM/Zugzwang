@@ -1,6 +1,6 @@
 ﻿# Roadmap — Zugzwang
 
-▶ Siguiente tarea: R2 (interfaz del análisis, tema claro y animaciones)
+▶ Siguiente tarea: R3 (lanzamiento v1.0)
 
 ## Notas de traspaso (tarea en curso)
 
@@ -15,7 +15,15 @@
   - `src/domain/openings.ts`: `loadBook()` (import dinámico de `src/data/openings.json`), `inBook`, `openingName`. El JSON se regenera con `npm run build:openings`.
   - `GameViewer` solo se adapta al tipo nuevo: todavía no muestra etiquetas, precisión ni apertura (R2).
 - **Límites de R1:** los nombres de apertura están en inglés (así vienen en lichess-org/chess-openings); «brillante» y «gran jugada» sin calibrar con partidas reales (`shortcut:` en `classify.ts`); la única jugada legal no lleva etiqueta pero sí cuenta en la precisión, como en lichess.
-- **Para R2:** calcular etiquetas y precisión solo con el análisis terminado (`classifyGame` reconstruye cada posición: hacerlo en cada posición analizada sería cuadrático en partidas largas).
+- **Entregado en R2 (interfaz):**
+  - `GameViewer` calcula el informe (`classifyGame`, `winDrops`, `gameAccuracy`) solo con el análisis terminado y carga el libro al montar.
+  - `MoveList` con la etiqueta de cada jugada; nombre de la apertura sobre la lista.
+  - `EvalGraph` (SVG, `role="slider"`, descrito por el resumen; el clic salta a la jugada y las flechas son las del visor).
+  - `MovePanel`: etiqueta, % perdido, mejor alternativa con flecha en el tablero (`Board` acepta `arrow`) y su línea navegable (`src/domain/line.ts`, `playLine`). Al cambiar de jugada se sale de la línea.
+  - `AnalysisSummary`: precisión por bando y recuento de etiquetas.
+  - Tema: `src/ui/theme.ts` + botón «Modo claro» en `App` (sigue al sistema hasta que se elige; se guarda en `localStorage`). Playwright corre en oscuro salvo `report.spec.ts`, que prueba el claro con axe.
+  - Animaciones: `@keyframes enter` en `base.css` para cada pantalla (`main`) y para el resumen; con `prefers-reduced-motion` las duraciones son 0.
+- **Límites de R2:** la barra sigue mostrando el mate como «#3», no «M3»; sin transición animada entre pantallas más allá de la entrada; el gráfico no se ha visto con partidas de 300 jugadas; no probado con lector de pantalla real; skill `frontend-design` no disponible en la sesión que lo hizo.
 - **Deuda aceptada, sigue en pie:**
   - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`. Sin comprobar que producción sirva el `.wasm` como `application/wasm` ni `crossOriginIsolated` en Cloudflare: mirarlo en R3.
   - Hallazgos de auditoría sin tarea: `UserPage` sigue descargando meses al salir y `?months=999` carga todo el historial; «Cargar mes anterior» puede pisar la lista si se cambia de mes mientras carga; `findGame` baja meses sin cancelar; un solo timeout de 15 s para petición y cuerpo; `new Worker` que lanza síncrono con el motor full no vuelve a lite; `cachedWasm` no revalida el hash; `moveCount` se recalcula en cada render de `GameCard`; código sin uso (`movetime`, `Game.rated`).
@@ -48,10 +56,10 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Dada 1.e4 e5 2.Cf3 Cc6 3.Ab5, cuando clasifico, entonces las 5 jugadas son «libro» y la apertura es «Ruy Lopez».
 **Tests:** U (un caso por frontera de umbral, propiedades de la curva, libro real).
 
-### R2 · Interfaz del análisis, tema claro y animaciones — `pendiente`
+### R2 · Interfaz del análisis, tema claro y animaciones — `en review`
 **Objetivo:** ver y entender la partida analizada.
 - Etiqueta de cada jugada en la lista y nombre de la apertura.
-- Barra con «M3» en los mates y gráfico SVG propio: área, marcadores por etiqueta, línea de la jugada actual, clic o teclado para saltar, alternativa textual.
+- Gráfico SVG propio: área, marcadores por etiqueta, línea de la jugada actual, clic o teclado para saltar, alternativa textual.
 - Panel de la jugada: etiqueta, caída en %, mejor alternativa con flecha en el tablero y su línea navegable (solo lectura, con vuelta a la partida).
 - Resumen: precisión por bando y recuento de etiquetas.
 - Tema claro opcional (por defecto el del sistema; la preferencia se guarda).

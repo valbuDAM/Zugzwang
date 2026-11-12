@@ -1,20 +1,29 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { gameAccuracy, winDrops } from '../domain/accuracy.ts';
 import { analyseGame, type PositionEval, winPercent } from '../domain/analysis.ts';
 import { readAnalysis, writeAnalysis } from '../domain/analysisCache.ts';
+import { classifyGame, type MoveLabel } from '../domain/classify.ts';
 import { type Engine, EngineLoadError } from '../domain/engine/engine.ts';
 import type { Variant } from '../domain/engine/variant.ts';
+import { playLine } from '../domain/line.ts';
+import { type Book, loadBook, openingName } from '../domain/openings.ts';
 import { parseGamePgn } from '../domain/pgn.ts';
 import { createEngine, createFullEngine, detectSettings, detectVariant } from '../engine/createEngine.ts';
 import { type DeepDeps, detectDeep } from '../engine/deep.ts';
 import { formatEval } from '../i18n/format.ts';
+import { AnalysisSummary } from './AnalysisSummary.tsx';
 import { Board } from './Board.tsx';
 import { DeepMode } from './DeepMode.tsx';
 import { EvalBar } from './EvalBar.tsx';
+import { EvalGraph } from './EvalGraph.tsx';
 import { MoveList, scrollToView } from './MoveList.tsx';
+import { MovePanel } from './MovePanel.tsx';
 import { playSound, readMuted, soundKind, storeMuted } from './sound.ts';
 import { useDeepMode } from './useDeepMode.ts';
 import './GameViewer.css';
+
+const WORSE: readonly MoveLabel[] = ['good', 'inaccuracy', 'mistake', 'blunder', 'miss'];
 
 type Analysis =
   | { status: 'idle' }
@@ -65,6 +74,10 @@ function Viewer({
   const [muted, setMuted] = useState(readMuted);
   // Read once: a rotation must not undo the reader's own fold.
   const [movesOpen] = useState(() => !window.matchMedia?.('(max-width: 40rem)').matches);
+  const [book, setBook] = useState<Book>();
+  // The engine's better line on the board: how many of its moves are played, for the move of `ply` only.
+  const [line, setLine] = useState<{ ply: number; step: number }>();
+  const summaryId = useId();
   const analysisAbort = useRef<AbortController>(null);
   const lastPly = useRef(0);
   const last = (positions?.length ?? 1) - 1;
@@ -88,6 +101,18 @@ function Viewer({
       stale = true;
     };
   }, [positions, fens, active, depth]);
+
+  // Without the book (offline, chunk not served) the game is analysed all the same, just without openings.
+  useEffect(() => {
+    let stale = false;
+    loadBook().then(
+      (loaded) => stale || setBook(loaded),
+      () => {},
+    );
+    return () => {
+      stale = true;
+    };
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -123,22 +148,53 @@ function Viewer({
   const evals = analysis.status === 'running' || analysis.status === 'done' ? analysis.evals : undefined;
   // Same array between renders: the move list is memoized on it.
   const scores = useMemo(() => evals?.map((e) => e.score), [evals]);
+  // Only for a finished analysis: classifying rebuilds every position, too much to repeat after each one.
+  const report = useMemo(() => {
+    if (analysis.status !== 'done' || !positions) return undefined;
+    const whiteStarts = fens[0]?.split(' ')[1] !== 'b';
+    const all = analysis.evals.map((e) => e.score);
+    return {
+      whiteStarts,
+      labels: classifyGame(positions, analysis.evals, book),
+      drops: winDrops(all, whiteStarts),
+      accuracy: gameAccuracy(all, whiteStarts),
+    };
+  }, [analysis, positions, fens, book]);
+  const opening = useMemo(() => book && openingName(book, fens), [book, fens]);
+  const label = report?.labels[ply];
+  // The engine's line from the position before the move, for a move that was worse than the engine's.
+  const better = useMemo(() => {
+    const before = evals?.[ply - 1];
+    const from = positions?.[ply - 1];
+    if (!label || !WORSE.includes(label) || !before || !from) return [];
+    return playLine(from.fen, before.pv);
+  }, [label, evals, positions, ply]);
+  // Moving on in the game leaves the line for good, also when coming back to this move.
+  if (line && line.ply !== ply) setLine(undefined);
+  const step = line?.ply === ply ? line.step : null;
 
   if (!positions) return <p role="alert">{t('game.invalid')}</p>;
   const current = positions[ply];
-  const currentScore = scores?.[ply];
+  // While the engine's line is on the board, the bar shows what the engine gave that line.
+  const currentScore = scores?.[step === null ? ply : ply - 1];
   // The first position is the start, not a move: "move N of M" counts the moves analysed.
   const moves = Math.max(0, (scores?.length ?? 0) - 1);
   const side = flipped ? (orientation === 'white' ? 'black' : 'white') : orientation;
   // Piece letters spoken in Spanish (Cf3, not Nf3); the only uppercase letters in SAN besides O-O are pieces.
   const spokenSan = current?.san?.replace(/[KQRBN]/g, (c) => t('game.pieceLetters').charAt('KQRBN'.indexOf(c)));
-  const announcement = spokenSan
+  const spokenMove = spokenSan
     ? t('game.announce', {
         number: Math.ceil(ply / 2),
         san: spokenSan,
         side: t(ply % 2 ? 'game.sideWhite' : 'game.sideBlack'),
       })
     : t('game.start');
+  const announcement = label
+    ? t('game.announceLabel', { move: spokenMove, label: t(`moveLabel.${label}`) })
+    : spokenMove;
+  // In the line: the position after `step` of its moves, with the next one as the arrow.
+  const shownFen = step === null ? current?.fen : step === 0 ? positions[ply - 1]?.fen : better[step - 1]?.fen;
+  const arrow = better[step ?? 0]?.uci;
 
   const analyse = async () => {
     const abort = new AbortController();
@@ -182,7 +238,7 @@ function Viewer({
         {currentScore && (
           <EvalBar whitePercent={winPercent(currentScore)} text={formatEval(currentScore)} orientation={side} />
         )}
-        <Board fen={current?.fen ?? ''} label={t('game.boardLabel')} orientation={side} />
+        <Board fen={shownFen ?? ''} label={t('game.boardLabel')} orientation={side} arrow={arrow} />
       </div>
       <p className="game-viewer-status" role="status">
         <span aria-hidden="true">{t('game.move', { current: ply, total: last })}</span>
@@ -210,6 +266,33 @@ function Viewer({
           {t('game.sound')}
         </button>
       </div>
+      {label && report && (
+        <MovePanel
+          label={label}
+          drop={report.drops[ply] ?? 0}
+          line={better}
+          step={step}
+          onStep={(next) => setLine(next === null ? undefined : { ply, step: next })}
+        />
+      )}
+      {scores && scores.length > 1 && (
+        <EvalGraph
+          scores={scores}
+          labels={report?.labels}
+          ply={ply}
+          total={last}
+          describedBy={report && summaryId}
+          onSelect={setPly}
+        />
+      )}
+      {report && (
+        <AnalysisSummary
+          id={summaryId}
+          accuracy={report.accuracy}
+          labels={report.labels}
+          whiteStarts={report.whiteStarts}
+        />
+      )}
       {analysis.status !== 'done' && (
         <div className="game-viewer-controls">
           <button
@@ -246,7 +329,12 @@ function Viewer({
         onToggle={(e) => scrollToView(e.currentTarget.querySelector<HTMLButtonElement>('[aria-current="step"]'))}
       >
         <summary>{t('game.moves')}</summary>
-        <MoveList positions={positions} ply={ply} scores={scores} onSelect={setPly} />
+        {opening && (
+          <p className="game-viewer-opening">
+            {t('game.opening')} <strong>{opening}</strong>
+          </p>
+        )}
+        <MoveList positions={positions} ply={ply} scores={scores} labels={report?.labels} onSelect={setPly} />
       </details>
     </section>
   );

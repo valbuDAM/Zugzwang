@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "Zugzwang"
+    "title": "Zugzwang",
+    "lightMode": "Modo claro"
   },
   "home": {
     "lead": "Analiza tus partidas de chess.com con Stockfish, sin salir del navegador.",
@@ -126,7 +127,9 @@
     "announce": "{{number}}. {{san}}, {{side}}",
     "sideWhite": "blancas",
     "sideBlack": "negras",
-    "pieceLetters": "RDTAC"
+    "pieceLetters": "RDTAC",
+    "opening": "Apertura:",
+    "announceLabel": "{{move}}, {{label}}"
   },
   "moveLabel": {
     "brilliant": "Brillante",
@@ -138,6 +141,24 @@
     "mistake": "Error",
     "blunder": "Error grave",
     "miss": "Oportunidad perdida"
+  },
+  "graph": {
+    "label": "Gráfico de evaluación"
+  },
+  "panel": {
+    "title": "Análisis de la jugada",
+    "drop": "pierde {{percent}} de opciones de ganar",
+    "best": "Lo mejor era",
+    "showLine": "Ver la línea",
+    "line": "Línea del motor",
+    "linePrev": "Atrás en la línea",
+    "lineNext": "Adelante en la línea",
+    "back": "Volver a la partida"
+  },
+  "summary": {
+    "title": "Resumen del análisis",
+    "accuracy": "Precisión de las {{side}}:",
+    "label": "Jugadas"
   },
   "evalBar": {
     "label": "Ventaja de las blancas"

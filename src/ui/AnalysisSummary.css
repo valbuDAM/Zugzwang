@@ -1,0 +1,50 @@
+.analysis-summary {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text); /* not the felt's text colour it would inherit */
+  animation: enter var(--duration-slow) var(--ease-out);
+}
+
+.analysis-summary-accuracy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+.analysis-summary-accuracy strong {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 400;
+}
+
+.analysis-summary table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.analysis-summary th,
+.analysis-summary td {
+  padding: var(--space-1) var(--space-2);
+  text-align: end;
+}
+
+.analysis-summary th:first-child {
+  text-align: start;
+}
+
+.analysis-summary th[scope="row"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+}
+
+.analysis-summary thead th {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}

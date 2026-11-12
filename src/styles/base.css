@@ -45,3 +45,35 @@ button {
   color: inherit;
   cursor: pointer;
 }
+
+.app-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-2) var(--space-4) 0;
+}
+
+.theme-toggle {
+  min-block-size: var(--target-touch);
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-inlay) solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+.theme-toggle[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+/* Entrance of a screen or a panel; the durations are 0 with reduced motion (tokens.css). */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+main {
+  animation: enter var(--duration-base) var(--ease-out);
+}
