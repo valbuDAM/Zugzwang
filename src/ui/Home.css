@@ -20,6 +20,135 @@
   color: var(--color-accent);
 }
 
+/* A game: on a wide screen the page makes room for the board and its side panel, and the header shrinks to one line. */
+@media (min-width: 64rem) {
+  .page-wide {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    max-inline-size: var(--page-wide);
+  }
+
+  .page-wide > * {
+    grid-column: 1 / -1;
+  }
+
+  .page-wide > h1 {
+    grid-column: 1;
+    font-size: var(--text-2xl);
+  }
+
+  .page-wide > a {
+    grid-column: 2;
+  }
+}
+
+/* Home: the wordmark and the two ways in beside the club table, the one memorable thing on the page. */
+.home {
+  gap: var(--space-7);
+  justify-items: stretch;
+  max-inline-size: var(--page-wide);
+}
+
+.home-hero {
+  display: grid;
+  gap: var(--space-6);
+  align-items: center;
+}
+
+@media (min-width: 56rem) {
+  .home-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
+    gap: var(--space-8);
+  }
+}
+
+.home-entry {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+
+.home h1 {
+  color: var(--color-accent);
+  letter-spacing: -0.02em;
+}
+
+.home-lead {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+}
+
+.home-table {
+  margin: 0;
+  padding: var(--space-4);
+  border: var(--space-2) solid var(--color-raised);
+  border-radius: var(--radius-md);
+  outline: 1px solid var(--color-accent);
+  background: var(--color-felt);
+  box-shadow: var(--shadow-felt);
+  color: var(--color-on-felt);
+}
+
+.home-table figcaption {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  margin-block-start: var(--space-4);
+}
+
+.home-table strong {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  line-height: var(--leading-tight);
+}
+
+/* Felt colours, not the brass: the felt is the same in both themes and the light theme's brass is too dark on it. */
+.home-table button {
+  min-block-size: var(--target-touch);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-inlay) solid var(--color-on-felt-muted);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-weight: 700;
+}
+
+.home-report {
+  display: grid;
+  gap: var(--space-5);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-inlay) solid var(--color-accent);
+}
+
+.home-report h2 {
+  font-size: var(--text-2xl);
+}
+
+.home-report-points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-5) var(--space-6);
+}
+
+.home-report h3 {
+  margin-block-end: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.home-report p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.home-report .home-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-end: var(--space-2);
+}
+
 .user-form {
   display: grid;
   gap: var(--space-2);

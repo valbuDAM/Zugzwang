@@ -4,6 +4,63 @@
   inline-size: 100%;
 }
 
+.game-viewer-details,
+.game-viewer-board {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* The scoresheet beside the board: one panel for everything the analysis says. */
+.game-viewer-side {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  min-inline-size: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text); /* not the felt's text colour it would inherit */
+}
+
+.game-viewer-side p {
+  margin: 0;
+}
+
+/* Wide screen: the board keeps to the left and stays in view while the panel scrolls. */
+@media (min-width: 64rem) {
+  .game-viewer {
+    grid-template-columns:
+      minmax(0, min(var(--board-max), 100dvh - var(--space-8) - var(--space-6)))
+      minmax(var(--side-min), 1fr);
+    grid-template-areas:
+      "board details"
+      "board side";
+    grid-template-rows: auto 1fr;
+    gap: 0 var(--space-5);
+    align-items: start;
+  }
+
+  .game-viewer-details {
+    grid-area: details;
+    padding-block-end: var(--space-4);
+  }
+
+  .game-viewer-board {
+    grid-area: board;
+    position: sticky;
+    inset-block-start: var(--space-4);
+  }
+
+  .game-viewer-side {
+    grid-area: side;
+  }
+
+  /* Room for the two rows of the move panel, so the move list does not jump from move to move. */
+  .game-viewer-move {
+    min-block-size: calc(var(--space-8) + var(--space-3));
+  }
+}
+
 .game-viewer-play {
   display: flex;
   align-items: stretch;
@@ -39,6 +96,13 @@
   font-weight: 700;
 }
 
+/* A switch that is off, on the felt: outlined in the felt's own colours, filled like the rest when on. */
+.game-viewer-controls button[aria-pressed="false"] {
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--border-inlay) var(--color-on-felt-muted);
+  color: var(--color-on-felt);
+}
+
 .game-viewer-controls button:disabled,
 .game-viewer-deep button:disabled {
   opacity: 0.5;
@@ -54,8 +118,20 @@
   accent-color: var(--color-accent);
 }
 
+.game-viewer-opening {
+  color: var(--color-text-muted);
+}
+
+.game-viewer-opening strong {
+  display: block;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  line-height: var(--leading-tight);
+}
+
 .game-viewer-about p {
-  margin: 0;
   color: var(--color-text-muted);
 }
 
@@ -76,6 +152,19 @@
   }
 }
 
+@media (max-width: 40rem) {
+  .game-viewer-side {
+    padding: var(--space-3);
+  }
+}
+
+/* One column: nothing to keep in place, so a move without a label leaves no gap. */
+@media (width < 64rem) {
+  .game-viewer-move:empty {
+    display: none;
+  }
+}
+
 .game-viewer-deep {
   display: grid;
   gap: var(--space-2);
@@ -86,9 +175,4 @@
 .game-viewer-deep progress {
   inline-size: 100%;
   accent-color: var(--color-accent);
-}
-
-.game-viewer-opening {
-  margin: 0 0 var(--space-2);
-  color: var(--color-on-felt-muted);
 }

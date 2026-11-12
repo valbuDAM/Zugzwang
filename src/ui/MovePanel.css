@@ -1,15 +1,21 @@
 .move-panel {
   display: grid;
   gap: var(--space-2);
-  justify-items: start;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text); /* not the felt's text colour it would inherit */
+  /* The better move and the button that shows its line share a row: two rows at most until the line is opened. */
+  grid-template-columns: 1fr auto;
+  align-items: center;
 }
 
-.move-panel p {
-  margin: 0;
+.move-panel > * {
+  grid-column: 1 / -1;
+}
+
+.move-panel > .move-panel-best {
+  grid-column: 1;
+}
+
+.move-panel > button {
+  grid-column: 2;
 }
 
 .move-panel-label {

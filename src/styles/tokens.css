@@ -53,6 +53,11 @@
   --leading-serif: 1.6;
   --measure: 68ch;
 
+  /* Layout: the wide pages (home, a game) and the two columns of the game viewer */
+  --page-wide: 80rem;
+  --board-max: 44rem;
+  --side-min: 22rem;
+
   /* Space (4 px grid) and radii */
   --target-touch: 2.75rem; /* 44px: comfortable touch target */
   --space-1: 0.25rem;

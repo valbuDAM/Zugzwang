@@ -18,7 +18,7 @@
 }
 
 .move-list-number {
-  color: var(--color-on-felt-muted);
+  color: var(--color-text-muted);
   text-align: end;
 }
 

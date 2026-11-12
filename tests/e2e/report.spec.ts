@@ -37,7 +37,7 @@ test('an analysed game shows its report: labels, better line with its arrow, gra
 
   const summary = page.getByRole('region', { name: 'Resumen del análisis' });
   await expect(summary).toContainText('Precisión de las blancas');
-  await expect(summary.getByRole('row', { name: /Error grave/ })).toContainText('1');
+  await expect(page.getByRole('row', { name: /Error grave/ })).toContainText('1');
   await expect(page.getByText(/Wayward Queen Attack/)).toBeAttached();
 
   // A click a third of the way along the graph lands on a move of the first half.

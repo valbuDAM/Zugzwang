@@ -32,7 +32,7 @@ export function PastedGamePage() {
   const game = loadPastedGame();
   if (!game) return <Redirect to="/" replace />;
   return (
-    <main className="page">
+    <main className="page page-wide">
       <h1>{t('paste.pageTitle')}</h1>
       <Link href="/">{t('paste.back')}</Link>
       <section className="game-summary" aria-labelledby="game-summary-title">

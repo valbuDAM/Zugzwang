@@ -95,7 +95,7 @@ it('sums up the accuracy and the labels of each side', async () => {
   const summary = screen.getByRole('region', { name: 'Resumen del análisis' });
   expect(summary).toHaveTextContent(/Precisión de las blancas: 100,0\s%/);
   expect(summary).toHaveTextContent(/Precisión de las negras: \d+,\d\s%/);
-  const row = within(summary).getByRole('row', { name: /Error grave/ });
+  const row = screen.getByRole('row', { name: /Error grave/ });
   expect(
     within(row)
       .getAllByRole('cell')

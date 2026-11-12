@@ -14,7 +14,22 @@
   "home": {
     "lead": "Analiza tus partidas de chess.com con Stockfish, sin salir del navegador.",
     "userLabel": "Usuario de chess.com",
-    "submit": "Ver partidas"
+    "submit": "Ver partidas",
+    "example": {
+      "boardLabel": "Posición final de Sämisch contra Nimzowitsch: las blancas, en zugzwang",
+      "title": "Sämisch contra Nimzowitsch, Copenhague, 1923",
+      "caption": "Tras 25… h6 las blancas abandonaron: cualquier jugada que hagan pierde material. Eso es un zugzwang.",
+      "open": "Ver esta partida"
+    },
+    "report": {
+      "title": "Qué te enseña el análisis",
+      "accuracyTitle": "La precisión de cada bando",
+      "accuracy": "Un porcentaje para las blancas y otro para las negras, con las fórmulas públicas de lichess.",
+      "labelsTitle": "Una etiqueta en cada jugada",
+      "labels": "De brillante a error grave. Cuando había algo mejor, el motor te enseña la línea sobre el tablero.",
+      "localTitle": "Todo en tu navegador",
+      "local": "Stockfish 19 corre en tu equipo. Ninguna partida sale de él: no hay servidor de análisis."
+    }
   },
   "paste": {
     "label": "O pega un PGN",

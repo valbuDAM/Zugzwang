@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { gameAccuracy, winDrops } from '../domain/accuracy.ts';
 import { analyseGame, type PositionEval, winPercent } from '../domain/analysis.ts';
@@ -12,7 +12,7 @@ import { parseGamePgn } from '../domain/pgn.ts';
 import { createEngine, createFullEngine, detectSettings, detectVariant } from '../engine/createEngine.ts';
 import { type DeepDeps, detectDeep } from '../engine/deep.ts';
 import { formatEval } from '../i18n/format.ts';
-import { AnalysisSummary } from './AnalysisSummary.tsx';
+import { AnalysisSummary, LabelCounts } from './AnalysisSummary.tsx';
 import { Board } from './Board.tsx';
 import { DeepMode } from './DeepMode.tsx';
 import { EvalBar } from './EvalBar.tsx';
@@ -43,6 +43,8 @@ type Props = {
   /** The deep mode of this browser (ADR-029); `undefined` where it is not offered. */
   deep?: DeepDeps | undefined;
   makeFullEngine?: (wasm: Blob) => Engine;
+  /** The game's details (players, date, result), shown above the analysis. */
+  children?: ReactNode;
 };
 
 // Another game starts from scratch: its position, its analysis, and no answer of the previous one reaches it.
@@ -55,6 +57,7 @@ function Viewer({
   variant = detectVariant(),
   deep,
   makeFullEngine = createFullEngine,
+  children,
 }: Props) {
   const { t } = useTranslation();
   const [deepDeps] = useState(() => deep ?? detectDeep());
@@ -234,108 +237,115 @@ function Viewer({
 
   return (
     <section className="game-viewer" aria-label={t('game.title')}>
-      <div className="game-viewer-play">
-        {currentScore && (
-          <EvalBar whitePercent={winPercent(currentScore)} text={formatEval(currentScore)} orientation={side} />
-        )}
-        <Board fen={shownFen ?? ''} label={t('game.boardLabel')} orientation={side} arrow={arrow} />
-      </div>
-      <p className="game-viewer-status" role="status">
-        <span aria-hidden="true">{t('game.move', { current: ply, total: last })}</span>
-        {current?.san && <strong aria-hidden="true">{current.san}</strong>}
-        <span className="sr-only">{announcement}</span>
-      </p>
-      <div className="game-viewer-controls">
-        <button type="button" disabled={ply === 0} onClick={() => setPly(ply - 1)}>
-          {t('game.prev')}
-        </button>
-        <button type="button" disabled={ply === last} onClick={() => setPly(ply + 1)}>
-          {t('game.next')}
-        </button>
-        <button type="button" aria-pressed={flipped} aria-keyshortcuts="F" onClick={() => setFlipped(!flipped)}>
-          {t('game.flip')}
-        </button>
-        <button
-          type="button"
-          aria-pressed={!muted}
-          onClick={() => {
-            storeMuted(!muted);
-            setMuted(!muted);
-          }}
-        >
-          {t('game.sound')}
-        </button>
-      </div>
-      {label && report && (
-        <MovePanel
-          label={label}
-          drop={report.drops[ply] ?? 0}
-          line={better}
-          step={step}
-          onStep={(next) => setLine(next === null ? undefined : { ply, step: next })}
-        />
-      )}
-      {scores && scores.length > 1 && (
-        <EvalGraph
-          scores={scores}
-          labels={report?.labels}
-          ply={ply}
-          total={last}
-          describedBy={report && summaryId}
-          onSelect={setPly}
-        />
-      )}
-      {report && (
-        <AnalysisSummary
-          id={summaryId}
-          accuracy={report.accuracy}
-          labels={report.labels}
-          whiteStarts={report.whiteStarts}
-        />
-      )}
-      {analysis.status !== 'done' && (
+      {children && <div className="game-viewer-details">{children}</div>}
+      <div className="game-viewer-board">
+        <div className="game-viewer-play">
+          {currentScore && (
+            <EvalBar whitePercent={winPercent(currentScore)} text={formatEval(currentScore)} orientation={side} />
+          )}
+          <Board fen={shownFen ?? ''} label={t('game.boardLabel')} orientation={side} arrow={arrow} />
+        </div>
+        <p className="game-viewer-status" role="status">
+          <span aria-hidden="true">{t('game.move', { current: ply, total: last })}</span>
+          {current?.san && <strong aria-hidden="true">{current.san}</strong>}
+          <span className="sr-only">{announcement}</span>
+        </p>
         <div className="game-viewer-controls">
+          <button type="button" disabled={ply === 0} onClick={() => setPly(ply - 1)}>
+            {t('game.prev')}
+          </button>
+          <button type="button" disabled={ply === last} onClick={() => setPly(ply + 1)}>
+            {t('game.next')}
+          </button>
+          <button type="button" aria-pressed={flipped} aria-keyshortcuts="F" onClick={() => setFlipped(!flipped)}>
+            {t('game.flip')}
+          </button>
           <button
             type="button"
-            disabled={analysis.status === 'running' || deepMode.state.status === 'downloading'}
-            onClick={analyse}
+            aria-pressed={!muted}
+            onClick={() => {
+              storeMuted(!muted);
+              setMuted(!muted);
+            }}
           >
-            {t('game.analyse')}
+            {t('game.sound')}
           </button>
         </div>
-      )}
-      {analysis.status === 'running' && (
-        // A native <progress> is announced every few percent; a live region would read out every position.
-        <div className="game-viewer-progress">
-          <progress max={last} value={moves} aria-label={t('game.progressLabel')} />
-          <span aria-hidden="true">{t('game.analysing', { done: moves, total: last })}</span>
-        </div>
-      )}
-      {analysis.status === 'error' && (
-        <p role="alert">{t(analysis.engineLoad ? 'game.engineLoadError' : 'game.analysisError')}</p>
-      )}
-      {analysis.status === 'done' && analysis.fellBack && <p role="alert">{t('game.fellBack')}</p>}
-      <details className="game-viewer-about">
-        <summary>{t('game.about')}</summary>
-        <p>
-          {t(`game.variant.${analysis.status === 'running' || analysis.status === 'done' ? analysis.variant : active}`)}
-        </p>
-        <DeepMode mode={deepMode} busy={analysis.status === 'running'} />
-      </details>
-      <details
-        className="game-viewer-moves"
-        open={movesOpen}
-        // A closed list cannot scroll itself, so bring the current move into view when it opens.
-        onToggle={(e) => scrollToView(e.currentTarget.querySelector<HTMLButtonElement>('[aria-current="step"]'))}
-      >
-        <summary>{t('game.moves')}</summary>
+      </div>
+      {/* Everything the analysis says, beside the board on a wide screen and under it on a narrow one. */}
+      <div className="game-viewer-side">
+        {analysis.status !== 'done' && (
+          <div className="game-viewer-controls">
+            <button
+              type="button"
+              disabled={analysis.status === 'running' || deepMode.state.status === 'downloading'}
+              onClick={analyse}
+            >
+              {t('game.analyse')}
+            </button>
+          </div>
+        )}
+        {analysis.status === 'running' && (
+          // A native <progress> is announced every few percent; a live region would read out every position.
+          <div className="game-viewer-progress">
+            <progress max={last} value={moves} aria-label={t('game.progressLabel')} />
+            <span aria-hidden="true">{t('game.analysing', { done: moves, total: last })}</span>
+          </div>
+        )}
+        {analysis.status === 'error' && (
+          <p role="alert">{t(analysis.engineLoad ? 'game.engineLoadError' : 'game.analysisError')}</p>
+        )}
+        {analysis.status === 'done' && analysis.fellBack && <p role="alert">{t('game.fellBack')}</p>}
+        {report && <AnalysisSummary id={summaryId} accuracy={report.accuracy} />}
         {opening && (
           <p className="game-viewer-opening">
             {t('game.opening')} <strong>{opening}</strong>
           </p>
         )}
-        <MoveList positions={positions} ply={ply} scores={scores} labels={report?.labels} onSelect={setPly} />
-      </details>
+        {scores && scores.length > 1 && (
+          <EvalGraph
+            scores={scores}
+            labels={report?.labels}
+            ply={ply}
+            total={last}
+            describedBy={report && summaryId}
+            onSelect={setPly}
+          />
+        )}
+        {report && (
+          // Always there once analysed, so the move list below does not jump between moves with and without a label.
+          <div className="game-viewer-move">
+            {label && (
+              <MovePanel
+                label={label}
+                drop={report.drops[ply] ?? 0}
+                line={better}
+                step={step}
+                onStep={(next) => setLine(next === null ? undefined : { ply, step: next })}
+              />
+            )}
+          </div>
+        )}
+        <details
+          className="game-viewer-moves"
+          open={movesOpen}
+          // A closed list cannot scroll itself, so bring the current move into view when it opens.
+          onToggle={(e) => scrollToView(e.currentTarget.querySelector<HTMLButtonElement>('[aria-current="step"]'))}
+        >
+          <summary>{t('game.moves')}</summary>
+          <MoveList positions={positions} ply={ply} scores={scores} labels={report?.labels} onSelect={setPly} />
+        </details>
+        {report && <LabelCounts labels={report.labels} whiteStarts={report.whiteStarts} />}
+        <details className="game-viewer-about">
+          <summary>{t('game.about')}</summary>
+          <p>
+            {t(
+              `game.variant.${analysis.status === 'running' || analysis.status === 'done' ? analysis.variant : active}`,
+            )}
+          </p>
+          <DeepMode mode={deepMode} busy={analysis.status === 'running'} />
+        </details>
+      </div>
     </section>
   );
 }

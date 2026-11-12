@@ -7,56 +7,53 @@ import './AnalysisSummary.css';
 
 const SIDES = ['white', 'black'] as const;
 
-/** Accuracy of each side and how many moves of each label it played. `id` names the accuracy line for `aria-describedby`. */
-export function AnalysisSummary({
-  id,
-  accuracy,
-  labels,
-  whiteStarts,
-}: {
-  id: string;
-  accuracy: GameAccuracy;
-  labels: (MoveLabel | null)[];
-  whiteStarts: boolean;
-}) {
+/** Accuracy of each side, on a plate of its own colour. `id` names the accuracy line for `aria-describedby`. */
+export function AnalysisSummary({ id, accuracy }: { id: string; accuracy: GameAccuracy }) {
   const { t } = useTranslation();
-  const count = (label: MoveLabel, white: boolean) =>
-    labels.filter((l, i) => l === label && ((i % 2 === 1) === whiteStarts) === white).length;
   const percent = (value: number | null) => (value === null ? '–' : formatPercent(value / 100));
   return (
     <section className="analysis-summary" aria-label={t('summary.title')}>
       <p id={id} className="analysis-summary-accuracy">
         {SIDES.map((side) => (
-          <span key={side}>
+          <span key={side} data-side={side}>
             {t('summary.accuracy', { side: t(side === 'white' ? 'game.sideWhite' : 'game.sideBlack') })}{' '}
             <strong>{percent(accuracy[side])}</strong>
           </span>
         ))}
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{t('summary.label')}</th>
-            {SIDES.map((side) => (
-              <th key={side} scope="col">
-                {t(`user.${side}`)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {MOVE_LABELS.filter((label) => labels.includes(label)).map((label) => (
-            <tr key={label}>
-              <th scope="row">
-                <MoveBadge label={label} />
-                {t(`moveLabel.${label}`)}
-              </th>
-              <td>{count(label, true)}</td>
-              <td>{count(label, false)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </section>
+  );
+}
+
+/** How many moves of each label each side played. */
+export function LabelCounts({ labels, whiteStarts }: { labels: (MoveLabel | null)[]; whiteStarts: boolean }) {
+  const { t } = useTranslation();
+  const count = (label: MoveLabel, white: boolean) =>
+    labels.filter((l, i) => l === label && ((i % 2 === 1) === whiteStarts) === white).length;
+  return (
+    <table className="label-counts">
+      <thead>
+        <tr>
+          <th scope="col">{t('summary.label')}</th>
+          {SIDES.map((side) => (
+            <th key={side} scope="col">
+              {t(`user.${side}`)}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {MOVE_LABELS.filter((label) => labels.includes(label)).map((label) => (
+          <tr key={label}>
+            <th scope="row">
+              <MoveBadge label={label} />
+              {t(`moveLabel.${label}`)}
+            </th>
+            <td>{count(label, true)}</td>
+            <td>{count(label, false)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
