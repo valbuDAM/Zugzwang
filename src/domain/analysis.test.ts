@@ -73,6 +73,54 @@ describe('analyseGame', () => {
     ]);
   });
 
+  describe('on an engine that runs several analyses at once (ADR-032)', () => {
+    afterEach(() => vi.useRealTimers());
+    // d2d4 is never the move played here: one search per position. Each answer comes after its own delay.
+    const engineAnswering = (...delays: (number | Error)[]) => {
+      let call = 0;
+      const analyse = vi.fn(() => {
+        const delay = delays[call++] ?? 0;
+        return new Promise<Eval>((resolve, reject) =>
+          setTimeout(
+            () =>
+              delay instanceof Error ? reject(delay) : resolve({ ...ev({ kind: 'cp', cp: 0 }), bestMove: 'd2d4' }),
+            delay instanceof Error ? 100 : delay,
+          ),
+        );
+      });
+      return { analyse, engine: { analyse, stop: () => {}, dispose: () => {}, parallel: 2 } satisfies Engine };
+    };
+    const FENS = [WHITE_TO_MOVE, BLACK_TO_MOVE, WHITE_TO_MOVE];
+
+    it('keeps that many positions going and reports only the in-order prefix', async () => {
+      vi.useFakeTimers();
+      const { analyse, engine } = engineAnswering(300, 100, 100); // the first position is the slowest
+      const onProgress = vi.fn();
+      const run = analyseGame(engine, FENS, { onProgress });
+
+      expect(analyse).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(200); // positions 1 and 2 done, still waiting for 0
+      expect(onProgress).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onProgress.mock.calls.map(([evals]) => evals.length)).toEqual([3]);
+      expect(scoresOf(await run)).toEqual([
+        { kind: 'cp', cp: 0 },
+        { kind: 'cp', cp: -0 },
+        { kind: 'cp', cp: 0 },
+      ]);
+    });
+
+    it('reports nothing more after a failure', async () => {
+      vi.useFakeTimers();
+      const { engine } = engineAnswering(new EngineError('boom'), 150);
+      const onProgress = vi.fn();
+      const run = expect(analyseGame(engine, FENS, { onProgress })).rejects.toBeInstanceOf(EngineError);
+      await vi.advanceTimersByTimeAsync(1_000);
+      await run;
+      expect(onProgress).not.toHaveBeenCalled();
+    });
+  });
+
   describe('second-best score (ADR-031)', () => {
     // The second search answers with its own score and depth; the first one says e2e4, the move played.
     const engineWith = (second: Eval) => {

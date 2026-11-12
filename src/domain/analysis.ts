@@ -73,7 +73,7 @@ type Options = {
   onProgress?: (evals: PositionEval[]) => void;
 };
 
-/** Analyses the positions in series; rejects at the first engine failure or when aborted. */
+/** Analyses the positions, as many at once as the engine runs; rejects at the first engine failure or when aborted. */
 export async function analyseGame(
   engine: Engine,
   fens: string[],
@@ -87,25 +87,41 @@ export async function analyseGame(
   const stop = () => engine.stop();
   signal?.addEventListener('abort', stop, { once: true });
   try {
-    const evals: PositionEval[] = [];
-    for (const [i, fen] of fens.entries()) {
+    const evaluate = async (i: number): Promise<PositionEval> => {
+      const fen = fens[i] as string;
       const final = finalScore(fen);
-      const found = final ? undefined : await engine.analyse(fen, { depth });
+      if (final) return { score: final, pv: [] };
+      const found = await engine.analyse(fen, { depth });
       checkAborted();
-      const searchmoves = found ? otherMovesIfPlayed(fen, found.bestMove, fens[i + 1]) : [];
+      const searchmoves = otherMovesIfPlayed(fen, found.bestMove, fens[i + 1]);
       const second = searchmoves.length ? await engine.analyse(fen, { depth, searchmoves }) : undefined;
       checkAborted();
-      evals.push(
-        found
-          ? {
-              score: toWhite(found.score, fen),
-              pv: found.pv.length ? found.pv : [found.bestMove],
-              // A second score from a shallower search would be compared with a deeper first one.
-              ...(second?.depth === found.depth && { second: toWhite(second.score, fen) }),
-            }
-          : { score: final as FinalScore, pv: [] },
-      );
-      onProgress?.([...evals]);
+      return {
+        score: toWhite(found.score, fen),
+        pv: found.pv.length ? found.pv : [found.bestMove],
+        // A second score from a shallower search would be compared with a deeper first one.
+        ...(second?.depth === found.depth && { second: toWhite(second.score, fen) }),
+      };
+    };
+
+    // ADR-032: one lane per analysis the engine runs at once; the progress still only grows from the start.
+    const evals: PositionEval[] = [];
+    let next = 0;
+    let reported = 0;
+    let failed = false;
+    const lane = async () => {
+      for (let i = next++; i < fens.length && !failed; i = next++) {
+        evals[i] = await evaluate(i);
+        if (failed || i !== reported) continue;
+        while (evals[reported]) reported++;
+        onProgress?.(evals.slice(0, reported));
+      }
+    };
+    try {
+      await Promise.all(Array.from({ length: engine.parallel ?? 1 }, lane));
+    } catch (error) {
+      failed = true; // the other lanes finish their search and stop, reporting nothing
+      throw error;
     }
     return evals;
   } finally {
