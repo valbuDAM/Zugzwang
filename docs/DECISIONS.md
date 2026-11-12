@@ -283,3 +283,12 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
   - «Gran jugada» exige que la jugada sea la PV1 y que la segunda línea sea de la misma profundidad. «Brillante» mide el material con el balance de ambos bandos tras la jugada y tres medias jugadas de la PV.
 - **Se mantiene:** `verifier` en verde, `ponytail-review`, CI obligatoria y squash merge por la usuaria.
 - **Consecuencias:** PR más grandes y más difíciles de revisar; a cambio, tres en vez de quince más sus PR de roadmap.
+
+### ADR-031 · Segunda línea solo donde hace falta
+- **Contexto:** la usuaria ve el análisis «lentísimo». Medido con lite de un hilo en Node (partida de la Ópera, 33 posiciones, profundidad 16): MultiPV 2 tarda 43,6 s y MultiPV 1, 10,0 s. La segunda línea solo se lee para «gran jugada», y solo cuando la jugada hecha es la PV1 (ADR-030). Quitar `ucinewgame` entre posiciones no cambia nada medible.
+- **Decisión:**
+  - Sin MultiPV (sustituye a «MultiPV 2» de ADR-009).
+  - `analyseGame` busca de nuevo, a la misma profundidad y con `searchmoves` = todas las jugadas legales menos la mejor, solo en las posiciones donde la mejor jugada fue la jugada hecha. Esa puntuación es `second`, y solo vale si llega a la misma profundidad que la primera.
+  - Se mantiene `ucinewgame` antes de cada búsqueda: sin él no se gana tiempo apreciable y el análisis deja de ser reproducible.
+- **Descartado:** segunda búsqueda menos profunda (comparar profundidades distintas, contra ADR-030); analizar de la última jugada a la primera (más lento en la medida); quitar «gran jugada».
+- **Consecuencias:** 43,6 s → 25,5 s en esa partida (1,7×); en partidas donde se juega menos veces la mejor jugada hay menos segundas búsquedas y la mejora es mayor. La caché sigue en `analysis:v2:`: un análisis guardado con MultiPV da la misma clasificación. Sin medir en el build multihilo.

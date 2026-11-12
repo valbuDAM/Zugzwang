@@ -54,7 +54,7 @@ test('stop aborts a deep search at once and the next analysis is not contaminate
   expect(next.bestMove).toBe('a1a8');
 });
 
-test('configures the engine: MultiPV 2 and a hash (ADR-009) before the first search', async ({ page }) => {
+test('configures the engine: a hash (ADR-009) and no MultiPV (ADR-031) before the first search', async ({ page }) => {
   await page.addInitScript(() => {
     const sent: string[] = [];
     Object.assign(window, { sent });
@@ -68,7 +68,7 @@ test('configures the engine: MultiPV 2 and a hash (ADR-009) before the first sea
   await analyse(page, MATE_IN_1, 5);
 
   const sent: string[] = await page.evaluate(() => (window as unknown as { sent: string[] }).sent);
-  expect(sent).toContain('setoption name MultiPV value 2');
+  expect(sent.some((c) => c.includes('MultiPV'))).toBe(false);
   expect(sent.some((c) => /^setoption name Hash value (16|64)$/.test(c))).toBe(true); // 16 on the touch project
   expect(sent.findIndex((c) => c.startsWith('setoption'))).toBeLessThan(sent.findIndex((c) => c.startsWith('go')));
 });

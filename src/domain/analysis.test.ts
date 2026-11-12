@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { analyseGame, type PositionEval, winPercent } from './analysis.ts';
-import { DEFAULT_DEPTH, type Engine, EngineError, type Eval } from './engine/engine.ts';
+import { type AnalyseOptions, DEFAULT_DEPTH, type Engine, EngineError, type Eval } from './engine/engine.ts';
 import { FakeEngine } from './engine/FakeEngine.ts';
 
 const WHITE_TO_MOVE = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -61,16 +61,62 @@ describe('analyseGame', () => {
     expect(engine.calls).toEqual([]);
   });
 
-  it('keeps the best line and the second score, from white, and falls back to the best move without a line', async () => {
+  it('keeps the best line, from white, and falls back to the best move without a line', async () => {
     const engine = new FakeEngine({
-      [WHITE_TO_MOVE]: { ...ev({ kind: 'cp', cp: 20 }), pv: ['d2d4', 'd7d5'], second: { kind: 'cp', cp: -5 } },
-      [BLACK_TO_MOVE]: { ...ev({ kind: 'cp', cp: 30 }), bestMove: 'e7e5', second: { kind: 'mate', mate: -4 } },
+      [WHITE_TO_MOVE]: { ...ev({ kind: 'cp', cp: 20 }), bestMove: 'd2d4', pv: ['d2d4', 'd7d5'] },
+      [BLACK_TO_MOVE]: { ...ev({ kind: 'cp', cp: 30 }), bestMove: 'e7e5' },
     });
     expect(await analyseGame(engine, [WHITE_TO_MOVE, BLACK_TO_MOVE, MATED_WHITE])).toEqual([
-      { score: { kind: 'cp', cp: 20 }, pv: ['d2d4', 'd7d5'], second: { kind: 'cp', cp: -5 } },
-      { score: { kind: 'cp', cp: -30 }, pv: ['e7e5'], second: { kind: 'mate', mate: 4 } },
+      { score: { kind: 'cp', cp: 20 }, pv: ['d2d4', 'd7d5'] },
+      { score: { kind: 'cp', cp: -30 }, pv: ['e7e5'] },
       { score: { kind: 'final', winner: 'black' }, pv: [] },
     ]);
+  });
+
+  describe('second-best score (ADR-031)', () => {
+    // The second search answers with its own score and depth; the first one says e2e4, the move played.
+    const engineWith = (second: Eval) => {
+      const analyse = vi.fn(async (_fen: string, opts?: AnalyseOptions) =>
+        opts?.searchmoves ? second : ev({ kind: 'cp', cp: 20 }),
+      );
+      return { analyse, engine: { analyse, stop: () => {}, dispose: () => {} } satisfies Engine };
+    };
+
+    it('searches again without the best move only where that move was played, at the same depth', async () => {
+      const { analyse, engine } = engineWith({ ...ev({ kind: 'cp', cp: -5 }), bestMove: 'd2d4' });
+      expect(await analyseGame(engine, [WHITE_TO_MOVE, BLACK_TO_MOVE], { depth: 10 })).toEqual([
+        { score: { kind: 'cp', cp: 20 }, pv: ['e2e4'], second: { kind: 'cp', cp: -5 } },
+        { score: { kind: 'cp', cp: -20 }, pv: ['e2e4'] },
+      ]);
+      expect(analyse.mock.calls.map(([fen, opts]) => [fen, opts?.searchmoves?.length])).toEqual([
+        [WHITE_TO_MOVE, undefined],
+        [WHITE_TO_MOVE, 19],
+        [BLACK_TO_MOVE, undefined],
+      ]);
+      const searchmoves = analyse.mock.calls[1]?.[1]?.searchmoves;
+      expect(searchmoves).toContain('g1f3');
+      expect(searchmoves).not.toContain('e2e4');
+    });
+
+    it('leaves out a second score from a shallower search', async () => {
+      const { engine } = engineWith({ ...ev({ kind: 'cp', cp: -5 }), depth: 9 });
+      const [first] = await analyseGame(engine, [WHITE_TO_MOVE, BLACK_TO_MOVE]);
+      expect(first).not.toHaveProperty('second');
+    });
+
+    it('lists castling as the king move and every promotion', async () => {
+      const before = '4k3/1P6/8/8/8/8/8/4K2R w K - 0 1';
+      const after = '4k3/1P6/8/8/8/8/8/5RK1 b - - 1 1';
+      const analyse = vi.fn(async (_fen: string, opts?: AnalyseOptions) => ({
+        ...ev({ kind: 'cp', cp: 0 }),
+        bestMove: opts?.searchmoves ? 'b7b8q' : 'e1g1',
+      }));
+      await analyseGame({ analyse, stop: () => {}, dispose: () => {} }, [before, after]);
+      const searchmoves = analyse.mock.calls[1]?.[1]?.searchmoves;
+      expect(searchmoves).toEqual(expect.arrayContaining(['b7b8q', 'b7b8r', 'b7b8b', 'b7b8n', 'h1h8']));
+      expect(searchmoves).not.toContain('e1g1');
+      expect(searchmoves).not.toContain('e1h1');
+    });
   });
 
   it('reports the evaluations so far after each position, as copies, finished positions included', async () => {
@@ -103,7 +149,11 @@ describe('analyseGame', () => {
 
   describe('with a signal', () => {
     const FENS = [WHITE_TO_MOVE, BLACK_TO_MOVE, WHITE_TO_MOVE];
-    const evals = { [WHITE_TO_MOVE]: ev({ kind: 'cp', cp: 1 }), [BLACK_TO_MOVE]: ev({ kind: 'cp', cp: 2 }) };
+    // d2d4 is not the move played: one search per position.
+    const evals = {
+      [WHITE_TO_MOVE]: { ...ev({ kind: 'cp', cp: 1 }), bestMove: 'd2d4' },
+      [BLACK_TO_MOVE]: ev({ kind: 'cp', cp: 2 }),
+    };
     afterEach(() => vi.useRealTimers());
 
     it('stops the engine, rejects with an AbortError and reports nothing more once aborted mid-game', async () => {

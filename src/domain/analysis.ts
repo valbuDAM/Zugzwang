@@ -1,5 +1,6 @@
-import { Chess } from 'chessops/chess';
-import { parseFen } from 'chessops/fen';
+import { Chess, castlingSide } from 'chessops/chess';
+import { makeFen, parseFen } from 'chessops/fen';
+import { kingCastlesTo, makeUci, parseUci, squareRank } from 'chessops/util';
 import { abortError, DEFAULT_DEPTH, type Engine, type Score } from './engine/engine.ts';
 
 /** A position where the game is already over (mate, stalemate, insufficient material): the engine cannot analyse it. */
@@ -39,6 +40,31 @@ function toWhite(score: Score, fen: string): Score {
   return score.kind === 'cp' ? { kind: 'cp', cp: -score.cp } : { kind: 'mate', mate: -score.mate };
 }
 
+/**
+ * ADR-031: the legal moves other than `best`, in UCI, but only when `best` is the move that leads to `next`: the
+ * second-best score is only read ("great move") where the best move was played. Empty otherwise.
+ */
+function otherMovesIfPlayed(fen: string, best: string, next: string | undefined): string[] {
+  const pos = Chess.fromSetup(parseFen(fen).unwrap()).unwrap();
+  const move = parseUci(best);
+  if (!next || !move || !pos.isLegal(move)) return [];
+  const after = pos.clone();
+  after.play(move);
+  // Two different moves never leave the same board, so the placement alone tells which one was played.
+  if (makeFen(after.toSetup()).split(' ')[0] !== next.split(' ')[0]) return [];
+  const others: string[] = [];
+  for (const [from, dests] of pos.allDests()) {
+    for (const to of dests) {
+      // chessops lists castling as king-takes-rook; Stockfish expects the king's real target.
+      const side = castlingSide(pos, { from, to });
+      const uci = makeUci({ from, to: side ? kingCastlesTo(pos.turn, side) : to });
+      const promotes = pos.board.pawn.has(from) && (squareRank(to) === 0 || squareRank(to) === 7);
+      others.push(...(promotes ? ['q', 'r', 'b', 'n'].map((p) => uci + p) : [uci]));
+    }
+  }
+  return others.filter((m) => m !== best);
+}
+
 type Options = {
   depth?: number;
   /** Aborting stops the engine and rejects with an `AbortError`; nothing of this analysis is reported afterwards. */
@@ -62,16 +88,20 @@ export async function analyseGame(
   signal?.addEventListener('abort', stop, { once: true });
   try {
     const evals: PositionEval[] = [];
-    for (const fen of fens) {
+    for (const [i, fen] of fens.entries()) {
       const final = finalScore(fen);
       const found = final ? undefined : await engine.analyse(fen, { depth });
+      checkAborted();
+      const searchmoves = found ? otherMovesIfPlayed(fen, found.bestMove, fens[i + 1]) : [];
+      const second = searchmoves.length ? await engine.analyse(fen, { depth, searchmoves }) : undefined;
       checkAborted();
       evals.push(
         found
           ? {
               score: toWhite(found.score, fen),
               pv: found.pv.length ? found.pv : [found.bestMove],
-              ...(found.second && { second: toWhite(found.second, fen) }),
+              // A second score from a shallower search would be compared with a deeper first one.
+              ...(second?.depth === found.depth && { second: toWhite(second.score, fen) }),
             }
           : { score: final as FinalScore, pv: [] },
       );
