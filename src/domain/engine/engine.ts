@@ -7,11 +7,10 @@ export type Eval = {
   bestMove: string;
   depth: number;
   pv: string[];
-  /** Score of the second-best line (MultiPV 2), when the engine reported one at the final depth. */
-  second?: Score;
 };
 
-export type AnalyseOptions = { depth?: number; movetime?: number };
+/** `searchmoves`: the UCI moves the search is restricted to. */
+export type AnalyseOptions = { depth?: number; movetime?: number; searchmoves?: string[] };
 
 export interface Engine {
   /** Analyses are queued; `stop()` rejects the running one and the queued ones with an `AbortError`. */

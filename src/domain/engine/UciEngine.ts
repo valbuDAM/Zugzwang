@@ -26,7 +26,6 @@ type Job = {
   settled: boolean;
   searching: boolean;
   last?: Info;
-  second?: Info;
   best?: { move: string | null };
 };
 
@@ -42,10 +41,11 @@ function invalidReason(fen: string): string | undefined {
   return undefined;
 }
 
-const goCommand = ({ depth, movetime }: AnalyseOptions) => {
+const goCommand = ({ depth, movetime, searchmoves }: AnalyseOptions) => {
   const parts = ['go'];
   if (depth !== undefined || movetime === undefined) parts.push('depth', String(depth ?? DEFAULT_DEPTH));
   if (movetime !== undefined) parts.push('movetime', String(movetime));
+  if (searchmoves?.length) parts.push('searchmoves', ...searchmoves);
   return parts.join(' ');
 };
 
@@ -64,7 +64,7 @@ export class UciEngine implements Engine {
 
   /**
    * `startTimeout`: ms the engine has to answer the handshake before it counts as not loaded (T4.1).
-   * `options`: UCI options (`Threads`, `Hash`, `MultiPV`…) set once, before the first search (T4.2).
+   * `options`: UCI options (`Threads`, `Hash`…) set once, before the first search (T4.2).
    */
   constructor(transport: Transport, { startTimeout = 10_000, options = {} } = {}) {
     this.#transport = transport;
@@ -156,9 +156,7 @@ export class UciEngine implements Engine {
     }
     const { depth, score, pv } = job.last;
     job.settled = true;
-    // A second line from a shallower depth would be compared with a deeper first one.
-    const second = job.second?.depth === depth ? job.second.score : undefined;
-    job.resolve({ score, bestMove: job.best.move, depth, pv, ...(second && { second }) });
+    job.resolve({ score, bestMove: job.best.move, depth, pv });
   }
 
   #settle(job: Job, error: Error): void {
@@ -182,7 +180,6 @@ export class UciEngine implements Engine {
       if (best) job.best = best;
       // With MultiPV > 1 the other lines would overwrite the best one.
       else if (info && !info.bound && info.multipv === 1) job.last = info;
-      else if (info && !info.bound && info.multipv === 2) job.second = info;
     }
     for (const waiter of this.#waiters) {
       if (!waiter.test(line)) continue;

@@ -81,21 +81,13 @@ describe('UciEngine', () => {
       bestMove: 'e2e4',
       depth: 10,
       pv: ['e2e4', 'e7e5'],
-      second: { kind: 'cp', cp: -40 },
     });
   });
 
-  it('leaves out a second line that is shallower than the first', async () => {
-    const t = scriptedTransport((c) =>
-      c.startsWith('go')
-        ? [
-            'info depth 9 multipv 2 score cp -40 pv d2d4',
-            'info depth 10 multipv 1 score cp 18 pv e2e4',
-            'bestmove e2e4',
-          ]
-        : defaultReply(c),
-    );
-    expect(await new UciEngine(t).analyse(START, { depth: 10 })).not.toHaveProperty('second');
+  it('restricts the search to `searchmoves`', async () => {
+    const t = scriptedTransport();
+    await new UciEngine(t).analyse(START, { depth: 10, searchmoves: ['d2d4', 'g1f3'] });
+    expect(t.sent.at(-1)).toBe('go depth 10 searchmoves d2d4 g1f3');
   });
 
   it('sends the options between `uciok` and the handshake `isready`', async () => {

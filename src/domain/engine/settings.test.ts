@@ -34,13 +34,13 @@ describe('analysisSettings (ADR-009)', () => {
       { depth: 12, threads: 1, hashMb: 16 },
     ],
   ] as const)('%j → %j', (env, expected) => {
-    expect(analysisSettings(env)).toEqual({ ...expected, multiPv: 2 });
+    expect(analysisSettings(env)).toEqual(expected);
   });
 });
 
 describe('uciOptions', () => {
   it('maps the settings to UCI options and leaves out a single thread', () => {
-    expect(uciOptions({ depth: 16, threads: 4, hashMb: 64, multiPv: 2 })).toEqual({ Threads: 4, Hash: 64, MultiPV: 2 });
-    expect(uciOptions({ depth: 12, threads: 1, hashMb: 16, multiPv: 2 })).toEqual({ Hash: 16, MultiPV: 2 });
+    expect(uciOptions({ depth: 16, threads: 4, hashMb: 64 })).toEqual({ Threads: 4, Hash: 64 });
+    expect(uciOptions({ depth: 12, threads: 1, hashMb: 16 })).toEqual({ Hash: 16 });
   });
 });

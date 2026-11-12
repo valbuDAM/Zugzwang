@@ -7,8 +7,9 @@
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
 - **Estado al pausar (12-11-2026):**
-  - Tres PR abiertos y apilados, todos verificados solo en local: #75 `feat/m5-analysis-domain` (R1, base `main`) ← #76 `feat/r2-analysis-ui` (R2) ← #77 `chore/r3-release` (R3). La rama de trabajo es `chore/r3-release`, que lo lleva todo. Un cambio nuevo va en una rama desde `chore/r3-release` (o en ella, si es un retoque de R3).
-  - **CI de GitHub bloqueada:** los jobs no arrancan («account is locked due to a billing issue»). Plan Free, 0 $ y sin pagos fallidos; la usuaria abrió un ticket a soporte. Cuando lo desbloqueen: `gh run rerun 43187763148` (#75) y relanzar los de #76 y #77. Sin CI en verde no se puede fusionar (rama protegida).
+  - R1–R4 ya están en `main`: #75 (R1) y #78 (R4, que llevaba R2 y R3; #76 y #77 se cerraron sin fusionar). Las ramas nuevas salen de `main`.
+  - **R5 (rama `feat/faster-analysis`):** análisis sin MultiPV (ADR-031). `analyseGame` pide la segunda puntuación con una búsqueda `searchmoves` solo donde se jugó la mejor jugada; `Eval.second` y `AnalysisSettings.multiPv` desaparecen. La caché sigue en `analysis:v2:` (los guardados con MultiPV dan la misma clasificación). Medido en Node (lite de un hilo, partida de la Ópera, 33 posiciones): profundidad 16 de 43,6 s a 25,5 s; quitar `ucinewgame` apenas ayuda y vuelve el análisis no reproducible.
+  - **Ideas para seguir acelerando, sin hacer:** más de 4 hilos en `lite-multi` (ADR-009; sin medir: Node solo corre el build de un hilo); bajar la profundidad de la segunda búsqueda (choca con ADR-030, que exige la misma).
   - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN. Los e2e no se ven afectados (simulan la API).
   - **Equipo (Windows, trabajo):** Node 26 en `C:\Program Files\nodejs` (si una sesión no lo ve en el PATH, reiniciar la app de Claude). Playwright con Chromium, Firefox y WebKit instalados. Node ejecuta los `.ts` quitando tipos: un script no puede importar `src/domain/pgn.ts` (usa propiedades de parámetro).
   - **Verificado en local sobre `chore/r3-release`:** lint, tipos, 322 tests, build, 69 e2e (Chromium + móvil, 1 omitido a propósito), `mutate` 87,90 % (`chesscom.ts` 78,68 % el más flojo, sin tocar).
@@ -17,7 +18,7 @@
   - **R4 (rama `feat/home-and-review-layout`, sale de `chore/r3-release`):** portada rediseñada y partida en dos columnas (ver el bloque R4 y `docs/DESIGN.md` › Disposición). `AnalysisSummary` ahora solo lleva la precisión; el recuento de etiquetas es `LabelCounts` (mismo archivo). `GameViewer` acepta `children` (los datos de la partida). Tokens nuevos: `--page-wide`, `--board-max`, `--side-min`. La página de una partida de chess.com solo se ha visto aquí simulando `fetch` en el navegador (la red bloquea la API). Verificado en local: lint, tipos, 323 tests, build, 69 e2e (`--workers=1`).
 - **Recta final (ADR-030):** lo que quedaba de M5–M7 se hace en tres PR (R1, R2, R3). El roadmap se actualiza dentro del PR de cada uno; ya no hay PR solo de roadmap ni cierre por hito.
 - **Entregado en R1 (dominio, sin interfaz nueva):**
-  - `Eval.second` (puntuación de la segunda línea de MultiPV, solo si es de la misma profundidad que la primera).
+  - `Eval.second` (segunda línea de MultiPV; quitado en R5, ADR-031: ahora la da una segunda búsqueda en `analyseGame`).
   - `analyseGame` devuelve `PositionEval[]` (`score` desde blancas, `pv`, `second`). La caché pasa a `analysis:v2:` (los análisis guardados con `v1` se repiten).
   - `src/domain/accuracy.ts`: `moveAccuracy`, `winDrops`, `gameAccuracy` (fórmula de lichess, con su `+1`).
   - `src/domain/classify.ts`: `classifyGame(positions, evals, book)` → etiqueta por jugada; `THRESHOLDS`; `MOVE_LABELS` y `MoveLabel` viven aquí (antes en `MoveBadge`).
@@ -50,13 +51,13 @@
 
 ## Hecho
 
-M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducción · M4 Motor robusto (PR #1–#73). Decisiones en ADR-001 a ADR-029.
+M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducción · M4 Motor robusto (PR #1–#73). Decisiones en ADR-001 a ADR-031.
 
 ---
 
 ## Recta final hasta v1.0
 
-### R1 · Dominio del análisis — `en review`
+### R1 · Dominio del análisis — `hecha`
 **Objetivo:** todo el cálculo, sin interfaz.
 - % de victoria y precisión de lichess (ADR-011).
 - Clasificación: mejor, buena, imprecisión, error, error grave, libro, gran jugada, brillante y oportunidad perdida (ADR-012).
@@ -67,7 +68,7 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Dada 1.e4 e5 2.Cf3 Cc6 3.Ab5, cuando clasifico, entonces las 5 jugadas son «libro» y la apertura es «Ruy Lopez».
 **Tests:** U (un caso por frontera de umbral, propiedades de la curva, libro real).
 
-### R2 · Interfaz del análisis, tema claro y animaciones — `en review`
+### R2 · Interfaz del análisis, tema claro y animaciones — `hecha`
 **Objetivo:** ver y entender la partida analizada.
 - Etiqueta de cada jugada en la lista y nombre de la apertura.
 - Gráfico SVG propio: área, marcadores por etiqueta, línea de la jugada actual, clic o teclado para saltar, alternativa textual.
@@ -83,7 +84,7 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 **Tests:** C · E + axe (dos temas, reduced-motion).
 **Skills:** frontend-design.
 
-### R3 · Lanzamiento v1.0 — `en review`
+### R3 · Lanzamiento v1.0 — `hecha`
 **Objetivo:** cumplir la GPL y publicar.
 - README (qué es, cómo ejecutarlo, licencia) y atribuciones: Stockfish, chessground, chessops, chess-openings, piezas y fuentes.
 - Página «Acerca de» con enlace al código fuente y a la versión exacta del motor.
@@ -91,16 +92,25 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Cierre único: `ponytail-audit`, `ponytail-debt`, `npm run mutate` (≥ 80 % en `src/domain/`), `.wasm` y `crossOriginIsolated` comprobados en producción, etiqueta `v1.0.0`.
 **Sin hacer en R3:** `ponytail-audit` de todo el repo y el pase de Firefox/WebKit en la CI (cuenta de GitHub bloqueada).
 
-### R4 · Portada y partida en dos columnas — `en review`
+### R4 · Portada y partida en dos columnas — `hecha`
 **Objetivo:** que la portada no esté vacía y que el análisis se lea junto al tablero (petición de la usuaria tras probar R3).
 - Portada: marca y entradas a la izquierda; a la derecha, la mesa del club con la posición final de Sämisch – Nimzowitsch (1923), que se abre en el visor con «Ver esta partida». Debajo, qué enseña el análisis.
 - Partida (≥ 64rem): tablero fijo a la izquierda; a la derecha, datos de la partida y un panel con precisión, apertura, gráfico, jugada actual, lista de jugadas y recuento de etiquetas. En estrecho, una columna.
 - Los interruptores «Girar tablero» y «Sonidos» muestran su estado.
 **Skills:** frontend-design, ponytail-review.
 
+### R5 · Análisis más rápido — `en review`
+**Objetivo:** que una partida se analice en mucho menos tiempo (petición de la usuaria: «el motor analiza lentísimo»).
+- Sin MultiPV: costaba 4,5 veces más cada búsqueda.
+- La segunda puntuación («gran jugada») sale de una segunda búsqueda a la misma profundidad sin la mejor jugada (`searchmoves`), solo donde esa jugada fue la jugada hecha (ADR-031).
+**Aceptación:**
+- Dada la partida de la Ópera a profundidad 16 con lite de un hilo, cuando la analizo, entonces tarda bastante menos que con MultiPV 2 (43,6 s → 25,5 s).
+- Dada una jugada que no es la mejor, cuando la analizo, entonces solo hay una búsqueda en esa posición.
+**Tests:** U (`analyseGame`: cuándo se pide la segunda búsqueda, enroque y coronación en `searchmoves`, profundidad distinta) · E (no se envía MultiPV).
+
 ### v1.0 · Publicar — `pendiente` (pasos de la usuaria)
-1. Desbloquear la cuenta de GitHub (ticket de facturación) y relanzar la CI de los PR #75, #76 y el de R3.
-2. Squash merge en orden: R1, R2, R3, R4 (cada uno se reapunta a `main` al fusionar el anterior).
+1. ~~Desbloquear la cuenta de GitHub y relanzar la CI.~~ Hecho.
+2. ~~Squash merge de R1–R4.~~ Hecho (#75 y #78).
 3. Lanzar el job manual de CI con todos los navegadores (`all_browsers`) sobre `main` y corregir lo que salga.
 4. En producción: comprobar que `/engine/stockfish-19-lite-single.wasm` se sirve como `application/wasm` y que `crossOriginIsolated` es `true`.
 5. `git tag v1.0.0 && git push origin v1.0.0`.

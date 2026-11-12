@@ -13,7 +13,8 @@ import { GameViewer } from './GameViewer.tsx';
 import * as sound from './sound.ts';
 
 const PGN = '1. e4 e5 2. Nf3 *';
-const ev = (cp: number): Eval => ({ score: { kind: 'cp', cp }, bestMove: 'e2e4', depth: 10, pv: [] });
+// a2a3 is never the move played here: one search per position, no second-best search.
+const ev = (cp: number): Eval => ({ score: { kind: 'cp', cp }, bestMove: 'a2a3', depth: 10, pv: [] });
 // The engine speaks from the side to move: positions 1 and 3 have black to move.
 const scriptedEngine = (options?: { latency: number }) => {
   const fens = parseGamePgn(PGN).map((p) => p.fen);
