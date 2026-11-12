@@ -6,6 +6,14 @@
 
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
+- **Estado al pausar (12-11-2026):**
+  - Tres PR abiertos y apilados, todos verificados solo en local: #75 `feat/m5-analysis-domain` (R1, base `main`) ← #76 `feat/r2-analysis-ui` (R2) ← #77 `chore/r3-release` (R3). La rama de trabajo es `chore/r3-release`, que lo lleva todo. Un cambio nuevo va en una rama desde `chore/r3-release` (o en ella, si es un retoque de R3).
+  - **CI de GitHub bloqueada:** los jobs no arrancan («account is locked due to a billing issue»). Plan Free, 0 $ y sin pagos fallidos; la usuaria abrió un ticket a soporte. Cuando lo desbloqueen: `gh run rerun 43187763148` (#75) y relanzar los de #76 y #77. Sin CI en verde no se puede fusionar (rama protegida).
+  - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN. Los e2e no se ven afectados (simulan la API).
+  - **Equipo (Windows, trabajo):** Node 26 en `C:\Program Files\nodejs` (si una sesión no lo ve en el PATH, reiniciar la app de Claude). Playwright con Chromium, Firefox y WebKit instalados. Node ejecuta los `.ts` quitando tipos: un script no puede importar `src/domain/pgn.ts` (usa propiedades de parámetro).
+  - **Verificado en local sobre `chore/r3-release`:** lint, tipos, 322 tests, build, 69 e2e (Chromium + móvil, 1 omitido a propósito), `mutate` 87,90 % (`chesscom.ts` 78,68 % el más flojo, sin tocar).
+  - **Sin hacer:** `ponytail-audit` de todo el repo; pase de Firefox/WebKit en la CI; comprobaciones en producción; etiqueta `v1.0.0`.
+  - **Probado a mano por la usuaria:** el servidor de desarrollo (`npm run dev`, puerto 5173, configuración `dev` de `.claude/launch.json`) con un PGN pegado. Iba a pedir «un par de cosas» nuevas tras el `/clear`: preguntarle cuáles.
 - **Recta final (ADR-030):** lo que quedaba de M5–M7 se hace en tres PR (R1, R2, R3). El roadmap se actualiza dentro del PR de cada uno; ya no hay PR solo de roadmap ni cierre por hito.
 - **Entregado en R1 (dominio, sin interfaz nueva):**
   - `Eval.second` (puntuación de la segunda línea de MultiPV, solo si es de la misma profundidad que la primera).
