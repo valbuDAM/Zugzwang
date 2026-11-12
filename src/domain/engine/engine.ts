@@ -13,6 +13,8 @@ export type Eval = {
 export type AnalyseOptions = { depth?: number; movetime?: number; searchmoves?: string[] };
 
 export interface Engine {
+  /** How many analyses it runs at once (ADR-032); 1 when left out. */
+  readonly parallel?: number;
   /** Analyses are queued; `stop()` rejects the running one and the queued ones with an `AbortError`. */
   analyse(fen: string, opts?: AnalyseOptions): Promise<Eval>;
   stop(): void;

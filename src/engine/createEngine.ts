@@ -1,3 +1,4 @@
+import { EnginePool } from '../domain/engine/EnginePool.ts';
 import type { Engine } from '../domain/engine/engine.ts';
 import { type AnalysisSettings, analysisSettings, uciOptions } from '../domain/engine/settings.ts';
 import { type Transport, UciEngine } from '../domain/engine/UciEngine.ts';
@@ -50,10 +51,15 @@ export const detectSettings = (variant: Variant = detectVariant()): AnalysisSett
     mobile: window.matchMedia?.('(pointer: coarse)')?.matches ?? false,
   });
 
-export const createEngine = (variant: Variant = detectVariant()): Engine =>
-  new UciEngine(workerTransport(`${import.meta.env.BASE_URL}engine/${VARIANT_FILES[variant]}`), {
-    options: uciOptions(detectSettings(variant)),
-  });
+/** ADR-032: one Worker per engine; with more than one they go behind an `EnginePool`. */
+export function createEngine(variant: Variant = detectVariant()): Engine {
+  const settings = detectSettings(variant);
+  const make = () =>
+    new UciEngine(workerTransport(`${import.meta.env.BASE_URL}engine/${VARIANT_FILES[variant]}`), {
+      options: uciOptions(settings),
+    });
+  return settings.engines > 1 ? new EnginePool(Array.from({ length: settings.engines }, make)) : make();
+}
 
 /** ADR-029: the big-network build reads its wasm from the cached copy. It takes the path from the Worker's `#hash`. */
 export function createFullEngine(wasm: Blob): Engine {

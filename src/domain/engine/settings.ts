@@ -1,6 +1,7 @@
 import type { Variant } from './variant.ts';
 
-export type AnalysisSettings = { depth: number; threads: number; hashMb: number };
+/** `engines`: how many engines analyse side by side, each with `threads` threads and `hashMb` of hash. */
+export type AnalysisSettings = { depth: number; engines: number; threads: number; hashMb: number };
 
 /**
  * The UCI options for `UciEngine`; `Threads` is left out at 1 (the default), which not every build lists.
@@ -11,7 +12,10 @@ export const uciOptions = ({ threads, hashMb }: AnalysisSettings): Record<string
   Hash: hashMb,
 });
 
-/** ADR-009: constants in code, not UI options. Only the multithreaded build can use more than one thread. */
+/**
+ * ADR-009: constants in code, not UI options. ADR-032: at a fixed depth more threads do not finish sooner, more
+ * engines on different positions do; past 4 there was no gain. The deep mode (~100 MB per engine) keeps one.
+ */
 export function analysisSettings({
   variant,
   cores,
@@ -21,10 +25,12 @@ export function analysisSettings({
   cores: number;
   mobile: boolean;
 }): AnalysisSettings {
-  const multi = variant === 'lite-multi' || variant === 'full-multi';
+  const spare = Math.max(1, Math.min(cores - 1, 4));
+  const full = variant === 'full-multi';
   return {
-    depth: multi && !mobile ? 16 : 12,
-    threads: multi ? Math.max(1, Math.min(cores - 1, 4)) : 1,
-    hashMb: mobile ? 16 : 64,
+    depth: (variant === 'lite-multi' || full) && !mobile ? 16 : 12,
+    engines: full ? 1 : mobile ? Math.min(spare, 2) : spare,
+    threads: full ? spare : 1,
+    hashMb: full ? 64 : 16,
   };
 }

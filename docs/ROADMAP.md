@@ -1,15 +1,16 @@
 ﻿# Roadmap — Zugzwang
 
-▶ Siguiente tarea: v1.0 (publicar: pasos de la usuaria)
+▶ Siguiente tarea: R7 (etiqueta en la esquina de cada jugada)
 
 ## Notas de traspaso (tarea en curso)
 
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
 - **Estado al pausar (12-11-2026):**
-  - R1–R4 ya están en `main`: #75 (R1) y #78 (R4, que llevaba R2 y R3; #76 y #77 se cerraron sin fusionar). Las ramas nuevas salen de `main`.
-  - **R5 (rama `feat/faster-analysis`):** análisis sin MultiPV (ADR-031). `analyseGame` pide la segunda puntuación con una búsqueda `searchmoves` solo donde se jugó la mejor jugada; `Eval.second` y `AnalysisSettings.multiPv` desaparecen. La caché sigue en `analysis:v2:` (los guardados con MultiPV dan la misma clasificación). Medido en Node (lite de un hilo, partida de la Ópera, 33 posiciones): profundidad 16 de 43,6 s a 25,5 s; quitar `ucinewgame` apenas ayuda y vuelve el análisis no reproducible.
-  - **Ideas para seguir acelerando, sin hacer:** más de 4 hilos en `lite-multi` (ADR-009; sin medir: Node solo corre el build de un hilo); bajar la profundidad de la segunda búsqueda (choca con ADR-030, que exige la misma).
+  - R1–R5 ya están en `main` (#75, #78, #79). Las ramas nuevas salen de `main`.
+  - **R5 (#79):** análisis sin MultiPV (ADR-031). `analyseGame` pide la segunda puntuación con una búsqueda `searchmoves` solo donde se jugó la mejor jugada. La caché sigue en `analysis:v2:`.
+  - **R6 (rama `feat/engine-pool`):** varios motores de un hilo en paralelo (ADR-032). `EnginePool` (`src/domain/engine/EnginePool.ts`) implementa `Engine` y expone `parallel`; `analyseGame` abre una «calle» por motor y solo informa el prefijo en orden. `AnalysisSettings` gana `engines`. Medido en el navegador de este equipo (12 núcleos, partida de la Ópera, profundidad 16): de ~45 s a 11,3 s; la primera jugada aparece a los 2 s.
+  - **Pedido por la usuaria tras R6:** R7 (etiqueta en la esquina) y R8 (explicar por qué era mejor, en vez del %). Respuestas ya dadas: la razón sustituye al % cuando la hay; si no, queda el %. Sin servidor ni IA: se razona con las líneas del motor.
   - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN. Los e2e no se ven afectados (simulan la API).
   - **Equipo (Windows, trabajo):** Node 26 en `C:\Program Files\nodejs` (si una sesión no lo ve en el PATH, reiniciar la app de Claude). Playwright con Chromium, Firefox y WebKit instalados. Node ejecuta los `.ts` quitando tipos: un script no puede importar `src/domain/pgn.ts` (usa propiedades de parámetro).
   - **Verificado en local sobre `chore/r3-release`:** lint, tipos, 322 tests, build, 69 e2e (Chromium + móvil, 1 omitido a propósito), `mutate` 87,90 % (`chesscom.ts` 78,68 % el más flojo, sin tocar).
@@ -51,7 +52,7 @@
 
 ## Hecho
 
-M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducción · M4 Motor robusto (PR #1–#73). Decisiones en ADR-001 a ADR-031.
+M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducción · M4 Motor robusto (PR #1–#73). Decisiones en ADR-001 a ADR-032.
 
 ---
 
@@ -99,7 +100,7 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Los interruptores «Girar tablero» y «Sonidos» muestran su estado.
 **Skills:** frontend-design, ponytail-review.
 
-### R5 · Análisis más rápido — `en review`
+### R5 · Análisis más rápido — `hecha`
 **Objetivo:** que una partida se analice en mucho menos tiempo (petición de la usuaria: «el motor analiza lentísimo»).
 - Sin MultiPV: costaba 4,5 veces más cada búsqueda.
 - La segunda puntuación («gran jugada») sale de una segunda búsqueda a la misma profundidad sin la mejor jugada (`searchmoves`), solo donde esa jugada fue la jugada hecha (ADR-031).
@@ -107,6 +108,25 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Dada la partida de la Ópera a profundidad 16 con lite de un hilo, cuando la analizo, entonces tarda bastante menos que con MultiPV 2 (43,6 s → 25,5 s).
 - Dada una jugada que no es la mejor, cuando la analizo, entonces solo hay una búsqueda en esa posición.
 **Tests:** U (`analyseGame`: cuándo se pide la segunda búsqueda, enroque y coronación en `searchmoves`, profundidad distinta) · E (no se envía MultiPV).
+
+### R6 · Varios motores en paralelo — `en review`
+**Objetivo:** que una partida de chess.com no tarde minutos (la usuaria: «sigue yendo lentísimo»).
+- Medido: a profundidad fija, 4 hilos no terminan antes que 1; 4 motores de un hilo con posiciones distintas sí (32 posiciones: 15,1 s → 4,5 s; más de 4 no gana).
+- Lite (y asm) con hasta 4 motores de un hilo y 16 MB de hash cada uno (2 en móvil); el modo profundo sigue con un motor y varios hilos (ADR-032).
+**Aceptación:**
+- Dada la partida de la Ópera a profundidad 16 en un equipo de escritorio, cuando la analizo, entonces tarda menos de la mitad que en R5 (~45 s → 11,3 s).
+- Dado un motor que va más lento en la primera posición, cuando las demás terminan antes, entonces el progreso no avanza hasta que termina la primera.
+- Dado un fallo en una posición, entonces no se informa nada más.
+**Tests:** U (`EnginePool`, `analyseGame` en paralelo, ajustes).
+
+### R7 · Etiqueta en la esquina de cada jugada — `pendiente`
+**Objetivo:** que el estado de cada jugada (libro, mejor, brillante…) se vea de un vistazo.
+- El icono de la etiqueta va arriba a la derecha de la casilla de cada jugada en la lista.
+**Skills:** frontend-design.
+
+### R8 · Por qué era mejor — `pendiente`
+**Objetivo:** en el panel de la jugada, explicar la alternativa en vez de solo dar el % perdido.
+- Razones sacadas de las líneas del motor, sin servidor: mate que se daba o se permitía, material que se ganaba o se perdía. Sin razón clara, queda el % de ahora.
 
 ### v1.0 · Publicar — `pendiente` (pasos de la usuaria)
 1. ~~Desbloquear la cuenta de GitHub y relanzar la CI.~~ Hecho.

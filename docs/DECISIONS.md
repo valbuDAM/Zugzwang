@@ -292,3 +292,12 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
   - Se mantiene `ucinewgame` antes de cada búsqueda: sin él no se gana tiempo apreciable y el análisis deja de ser reproducible.
 - **Descartado:** segunda búsqueda menos profunda (comparar profundidades distintas, contra ADR-030); analizar de la última jugada a la primera (más lento en la medida); quitar «gran jugada».
 - **Consecuencias:** 43,6 s → 25,5 s en esa partida (1,7×); en partidas donde se juega menos veces la mejor jugada hay menos segundas búsquedas y la mejora es mayor. La caché sigue en `analysis:v2:`: un análisis guardado con MultiPV da la misma clasificación. Sin medir en el build multihilo.
+
+### ADR-032 · Varios motores en paralelo
+- **Contexto:** con R5 una partida de chess.com seguía tardando minutos. Medido en Chromium (12 núcleos) con `go depth 16`: 1, 4 u 11 hilos tardan lo mismo por posición (~0,5 s; más hilos solo exploran más nodos). Con varios Workers de un hilo, cada uno en otra posición, 32 posiciones pasan de 15,1 s (1) a 4,5 s (4); 6, 8 y 11 no mejoran.
+- **Decisión:**
+  - Lite y asm: `engines = max(1, min(núcleos − 1, 4))` (2 como mucho en móvil), cada uno de un hilo y con 16 MB de hash (sustituye a los hilos y al hash de ADR-009 para lite).
+  - `EnginePool` implementa `Engine` y dice cuántas búsquedas lleva a la vez (`parallel`); `analyseGame` abre una calle por cada una e informa solo el prefijo de la partida ya analizado, en orden.
+  - El modo profundo (~100 MB por motor, ADR-029) sigue con un motor y varios hilos.
+- **Descartado:** bajar la profundidad (peor análisis); más de 4 motores (sin ganancia medida y más memoria); un motor por posición sin límite.
+- **Consecuencias:** la partida de la Ópera a profundidad 16 pasa de ~45 s a 11,3 s. Cada búsqueda de un hilo a profundidad fija es reproducible, así que la caché y los resultados no cambian. Un fallo en una calle rechaza el análisis; las otras terminan su búsqueda en curso y no informan más. Sin medir en móvil, Firefox ni WebKit.
