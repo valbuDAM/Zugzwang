@@ -1,6 +1,6 @@
 # Zugzwang
 
-[![CI](https://github.com/valbuDAM/chessAnalyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/valbuDAM/chessAnalyzer/actions/workflows/ci.yml)
+[![CI](https://github.com/valbuDAM/Zugzwang/actions/workflows/ci.yml/badge.svg)](https://github.com/valbuDAM/Zugzwang/actions/workflows/ci.yml)
 [![Licencia: GPL-3.0](https://img.shields.io/badge/licencia-GPL--3.0-blue)](LICENSE)
 
 Analizador de partidas de [chess.com](https://www.chess.com) que se ejecuta entero en el navegador: Stockfish 19 en WebAssembly, sin servidor de análisis. Tus partidas no salen de tu equipo.

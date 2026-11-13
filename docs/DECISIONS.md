@@ -172,6 +172,7 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
 
 ### ADR-019 · Nombre: Zugzwang
 - **Decisión:** el producto se llama **Zugzwang**; el repositorio, `valbuDAM/chessAnalyzer` (igual que la carpeta local, por decisión de la usuaria).
+- **Actualización (ADR-034):** el repositorio se renombró a `valbuDAM/Zugzwang` (GitHub redirige el nombre antiguo); la carpeta local y el Worker `chessanalyzer` siguen igual.
 
 ### ADR-020 · Caché de chess.com sin cabeceras condicionales
 - **Contexto:** enviar `If-None-Match` a mano deja de ser una petición CORS simple y provoca un preflight `OPTIONS` que no sabemos si chess.com responde.

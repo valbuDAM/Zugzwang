@@ -5,7 +5,7 @@
   "type": "module",
   "license": "GPL-3.0-only",
   "homepage": "https://chessanalyzer.bvalbuena06.workers.dev/",
-  "repository": "github:valbuDAM/chessAnalyzer",
+  "repository": "github:valbuDAM/Zugzwang",
   "engines": {
     "node": ">=24"
   },
