@@ -172,6 +172,20 @@
   "panel": {
     "title": "Análisis de la jugada",
     "drop": "pierde {{percent}} de opciones de ganar",
+    "reason": {
+      "missedMate": "tenías mate en {{moves}}",
+      "allowsMate": "te dan mate en {{moves}}",
+      "loses": "pierdes {{what}}",
+      "wins": "podías ganar {{what}}"
+    },
+    "material": {
+      "pawn": "un peón",
+      "knight": "un caballo",
+      "bishop": "un alfil",
+      "rook": "una torre",
+      "queen": "la dama",
+      "any": "material"
+    },
     "best": "Lo mejor era",
     "showLine": "Ver la línea",
     "line": "Línea del motor",

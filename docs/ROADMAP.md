@@ -1,21 +1,18 @@
 ﻿# Roadmap — Zugzwang
 
-▶ Siguiente tarea: R8 (explicar por qué era mejor la alternativa)
+▶ Siguiente tarea: v1.0 · Publicar (pasos 3–6, de la usuaria), tras el squash merge del PR de R8
 
 ## Notas de traspaso (tarea en curso)
 
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
 - **Estado al pausar (13-11-2026):**
-  - R1–R7 ya están en `main` (#75, #78, #79, #80, #81). **R7b** (insignias en el tablero, mate e icono) está hecha en la rama `feat/board-badges`, con PR abierto: falta que la usuaria lo revise y haga squash merge. **Siguiente: R8.** La rama local `feat/move-reason` solo tenía el commit de estas notas, que ya va dentro del PR de R7b: tras el merge, borrarla y crearla de nuevo desde `main`.
-  - **Pedido de la usuaria para R8 (12-11-2026), con sus palabras:** «investigar si fuera posible poner, en vez del porcentaje, por qué era mejor razonándolo». Pide la implementación más simple posible y revisar con cuidado el código; si hay dudas, preguntarle.
-  - **Decidido con la usuaria para R8:** la razón sustituye al % cuando la hay; si no hay una clara, queda el % de ahora. Sin servidor ni IA: se razona con las líneas del motor que ya hay (`PositionEval.pv` antes y después de la jugada, `score` con mate).
-  - **Antes de codificar R8:** su bloque solo tiene objetivo y pistas; faltan los criterios de aceptación (qué razones y con qué texto exacto). Fijarlos con la usuaria (skill `grilling` si hay que decidir diseño). Es lógica de dominio con casos de ajedrez sutiles (mates, capturas intermedias, sacrificios): si un problema lo pide, la usuaria sube el modelo a mano (ADR-030).
-  - **Pistas para R8:** el texto del % es `"drop"` en `src/i18n/es.json:173` (lo pinta `MovePanel`); «Lo mejor era» es `"best"`. Para el material ya hay `sacrifices()` en `src/domain/classify.ts:50` (recorre una línea y cuenta material): reutilizarlo o sacar de ahí un contador. Razones candidatas, de más a menos clara: la mejor daba mate en N; tu jugada permite mate en N; la mejor ganaba material (pieza) en su línea; tu jugada pierde material en la línea del rival. Lógica pura en `src/domain/` con tests primero.
+  - R1–R7b ya están en `main` (#75, #78, #79, #80, #81, #82). **R8 hecho** en la rama `feat/move-reason`, con PR abierto: falta que la usuaria lo revise (la interfaz, en local con `npm run build && npx vite preview`) y haga squash merge. Después solo queda v1.0.
+  - **R8 (ADR-033):** `moveReason` en `src/domain/reason.ts` saca la razón de las líneas que ya guarda el análisis; `GameViewer` se la pasa a `MovePanel`; textos en `panel.reason` y `panel.material` de `es.json`. Elegido por la usuaria (13-11-2026): nombrar la pieza, umbral de más de un peón y textos de tú. Para ver razones en el navegador hace falta una partida con errores gordos (la de la portada solo da una): pegar un PGN corto con piezas colgadas.
   - **Probar la interfaz aquí:** `preview_start` con `dev` (puerto 5173) → «Ver esta partida» de la portada → «Analizar» (motor real, no necesita la API de chess.com). Para medir el motor: importar `/src/engine/createEngine.ts` y `/src/domain/analysis.ts` desde la consola de la página y cronometrar `analyseGame` (con el panel del navegador oculto los tiempos salen peores).
   - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN; la página de una partida de chess.com solo se ha visto simulando `fetch`. Los e2e no se ven afectados (simulan la API).
   - **Equipo (Windows, trabajo):** Node 26 en `C:\Program Files\nodejs` (si una sesión no lo ve en el PATH, reiniciar la app de Claude). Playwright con Chromium, Firefox y WebKit instalados. Node ejecuta los `.ts` quitando tipos: un script no puede importar `src/domain/pgn.ts` (usa propiedades de parámetro).
-  - **Verificado en local en R7:** lint, tipos, 332 tests, build y e2e Chromium + móvil con `--workers=1` (160/160 en 5 repeticiones de `home`, `styleguide` y `report`). El fixture de axe (`tests/e2e/fixtures.ts`) espera ahora a las animaciones: antes fallaba al azar con un `color-contrast` falso. `mutate` por última vez en R3: 87,90 % (`chesscom.ts` 78,68 %, el más flojo).
+  - **Verificado en local en R8:** lint, tipos, 357 tests (98,79 % de ramas en `src/domain/`), build y e2e Chromium + móvil con `--workers=1` (69 pasan, 1 omitido). El fixture de axe (`tests/e2e/fixtures.ts`) espera ahora a las animaciones: antes fallaba al azar con un `color-contrast` falso. `mutate` por última vez en R3: 87,90 % (`chesscom.ts` 78,68 %, el más flojo).
   - **Sin hacer para v1.0:** los pasos 3–6 de abajo, que son de la usuaria, y `ponytail-audit` de todo el repo.
 - **Recta final (ADR-030):** el roadmap se actualiza dentro del PR de cada tarea; no hay PR solo de roadmap ni cierre por hito.
 - **Límites conocidos de R1–R7:** nombres de apertura en inglés (vienen así de lichess-org/chess-openings); «brillante» y «gran jugada» sin calibrar con partidas reales (`shortcut:` en `classify.ts`); la única jugada legal no lleva etiqueta pero sí cuenta en la precisión, como en lichess; la barra muestra el mate como «#3», no «M3»; el gráfico no se ha visto con partidas de 300 jugadas; sin probar con lector de pantalla real; la caché de análisis es `analysis:v2:` (los análisis `v1` se repiten); el glifo de la etiqueta en la lista mide 9,6 px (el nombre completo está en el panel de la jugada); en el tablero, a 375 px, la insignia mide 14,5 px; el icono es solo SVG (sin PNG para iOS ni `favicon.ico`); el lector de pantalla oye el mate como el «#» de la jugada, no como «jaque mate».
@@ -124,9 +121,17 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 **Tests:** U (`Position.mated`) · C (`Board`: casilla y tablero girado; `GameViewer`: etiqueta, mate, línea del motor, sin analizar) · colocación comprobada en el navegador (escritorio y 375 px).
 **Skills:** frontend-design.
 
-### R8 · Por qué era mejor — `pendiente`
+### R8 · Por qué era mejor — `hecho` (PR abierto)
 **Objetivo:** en el panel de la jugada, explicar la alternativa en vez de solo dar el % perdido.
-- Razones sacadas de las líneas del motor, sin servidor: mate que se daba o se permitía, material que se ganaba o se perdía. Sin razón clara, queda el % de ahora.
+- Razones sacadas de las líneas del motor, sin servidor (ADR-033): mate que se daba o se permitía, material que se ganaba o se perdía. Sin razón clara, queda el % de ahora.
+**Aceptación:**
+- Dada una jugada con «Lo mejor era» en la que tenía mate y ya no, entonces el panel dice «tenías mate en N» en vez del %.
+- Dada una jugada tras la que el rival tiene mate y antes no, entonces dice «te dan mate en N».
+- Dada una jugada cuya línea pierde más de un peón respecto a la mejor, entonces dice «pierdes un caballo» (la pieza, si es una sola) o «pierdes material».
+- Dada una mejor línea que ganaba más de un peón, entonces dice «podías ganar la dama» o «podías ganar material»; si además la jugada pierde material, se dice la mayor de las dos.
+- Dada una línea que acaba en captura, una diferencia de un solo peón o una mejor línea que sacrifica material, entonces queda el % de antes.
+**Tests:** U (`moveReason`: mates, material, pieza, líneas a medio cambio) · C (`GameViewer`: mate, dama, % cuando no hay razón) · visto en el navegador con el motor real.
+**Skills:** frontend-design (solo redacción: mismo sitio y mismos tokens).
 
 ### v1.0 · Publicar — `pendiente` (pasos de la usuaria)
 1. ~~Desbloquear la cuenta de GitHub y relanzar la CI.~~ Hecho.

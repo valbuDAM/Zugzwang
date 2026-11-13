@@ -77,6 +77,29 @@ it('shows the better move as an arrow and walks its line and back', async () => 
   expect(board()).toHaveAttribute('data-arrow', 'g7g6');
 });
 
+it('says why the engine move was better, and the win% lost when nothing clear explains it', async () => {
+  const settings = { variant: 'lite-single', depth: detectSettings('lite-single').depth } as const;
+  const panelAfter = async (evals: PositionEval[]) => {
+    await writeAnalysis(fens, settings, evals);
+    const view = await open();
+    await userEvent.click(screen.getByRole('button', { name: /^Nf6/ }));
+    const text = screen.getByRole('region', { name: 'Análisis de la jugada' }).textContent;
+    view.unmount();
+    return text;
+  };
+  const noMate: PositionEval = { score: { kind: 'cp', cp: 400 }, pv: ['h5f7'] };
+
+  const mate = await panelAfter(EVALS);
+  expect(mate).toContain('te dan mate en 1');
+  expect(mate).not.toContain('opciones de ganar');
+
+  // 3… g6 4. Qh4 Qxh4: the engine's line wins the queen.
+  const queen = await panelAfter(EVALS.with(5, even(['g7g6', 'h5h4', 'd8h4', 'g1f3'])).with(6, noMate));
+  expect(queen).toContain('podías ganar la dama');
+
+  expect(await panelAfter(EVALS.with(6, noMate))).toContain('opciones de ganar');
+});
+
 // The marks are hidden from assistive tech (the status line says the same in words), so they are read from the DOM.
 const marks = (container: HTMLElement) =>
   [...container.querySelectorAll('.board-mark')].map(
