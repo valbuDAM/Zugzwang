@@ -12,14 +12,16 @@
   isolation: isolate; /* chessground's z-indexes stay under the marks */
 }
 
-/* Top-right corner of its square. Physical offsets: the files run left to right whatever the writing direction. */
+/*
+ * Over the top-right corner of its square, a third of it outside so it stays clear of the piece.
+ * Physical offsets: the files run left to right whatever the writing direction.
+ */
 .board-mark {
   position: absolute;
   top: calc(var(--row) * 12.5%);
   left: calc((var(--col) + 1) * 12.5%);
   display: flex; /* no line box around the badge */
-  translate: -100% 0;
-  padding: 0.4cqi;
+  translate: -65% -35%;
   pointer-events: none;
   /* Lands once the piece has: chessground slides it for about as long. */
   animation: board-mark-land var(--duration-base) var(--ease-spring) var(--duration-base) backwards;
