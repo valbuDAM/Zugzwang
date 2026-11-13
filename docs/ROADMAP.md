@@ -7,43 +7,21 @@
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
 - **Estado al pausar (13-11-2026):**
-  - R1–R6 ya están en `main` (#75, #78, #79, #80). R7 está hecha en la rama `feat/move-badge-corner` (PR abierto, pendiente de CI y de que la usuaria lo revise y haga squash merge). R8 en otra rama desde `main` cuando R7 esté fusionado.
-  - **R7:** solo CSS en `src/ui/MoveList.css`: el botón de cada jugada es `position: relative` con `padding-inline-end` para que el icono no tape el reloj ni la evaluación, y `.move-list .move-badge` va absoluto arriba a la derecha (16 px, aro del color del fondo para separarlo de la jugada resaltada). `MoveBadge.tsx/.css` no cambia, así que `MovePanel`, `AnalysisSummary` y `Home` siguen igual. Comprobado en el navegador con la partida de muestra analizada: 50 etiquetas dentro de su botón, a 4 px de la esquina, sin solape, en escritorio y en móvil (375 px, sin scroll horizontal). Límite: a 9,6 px el glifo es pequeño; el nombre completo sigue en el panel de la jugada y en el nombre accesible. `report.spec.ts` fija la colocación (caja del icono dentro de la esquina superior derecha y fuera del texto de la jugada).
-  - **Pruebas inestables arregladas de paso:** dos pasadas completas de e2e fallaron cada una en una prueba distinta (`home.spec.ts` en móvil, `styleguide.spec.ts`) con `color-contrast` de axe, porque axe leía el texto a medias de la animación de entrada (`@keyframes enter`, de R2). `tests/e2e/fixtures.ts` espera ahora a `document.getAnimations()` antes de axe (commit aparte). 160/160 en 5 repeticiones de home, styleguide y report (Chromium + móvil).
-  - **R5 (#79):** análisis sin MultiPV (ADR-031). `analyseGame` pide la segunda puntuación con una búsqueda `searchmoves` solo donde se jugó la mejor jugada. La caché sigue en `analysis:v2:`.
-  - **R6 (#80):** varios motores de un hilo en paralelo (ADR-032). `EnginePool` (`src/domain/engine/EnginePool.ts`) implementa `Engine` y expone `parallel`; `analyseGame` abre una «calle» por motor y solo informa el prefijo en orden. `AnalysisSettings` gana `engines`. Medido en el navegador de este equipo (12 núcleos, partida de la Ópera, profundidad 16): de ~45 s a 11,3 s; la primera jugada aparece a los 2 s. Sin probar con una partida real del perfil de chess.com (esta red bloquea la API), ni en móvil, Firefox o WebKit.
-  - **Medir el motor en el navegador:** `preview_start` con `dev`, pegar un PGN y, en la consola de la página, importar `/src/engine/createEngine.ts` y `/src/domain/analysis.ts` (Vite los sirve) y cronometrar `analyseGame`. Con el panel del navegador oculto los tiempos pueden salir peores.
-  - **Pedido por la usuaria tras R6 (12-11-2026), con sus palabras:** «el icono de libro, mejor, excelente, brillante, etc. tiene que ir arriba a la derecha de cada casilla de cada movimiento, para que esté claro el estado» (R7) e «investigar si fuera posible poner, en vez del porcentaje, por qué era mejor razonándolo» (R8). Pide la implementación más simple posible y revisar con cuidado el código; si hay dudas, preguntarle.
+  - R1–R7 ya están en `main` (#75, #78, #79, #80, #81). **Siguiente: R8**, en la rama `feat/move-reason` (sale de `main` tras #81; esta nota es su primer commit, sin push todavía). La usuaria cambia de modelo y hace `/clear` antes de empezar.
+  - **Pedido de la usuaria para R8 (12-11-2026), con sus palabras:** «investigar si fuera posible poner, en vez del porcentaje, por qué era mejor razonándolo». Pide la implementación más simple posible y revisar con cuidado el código; si hay dudas, preguntarle.
   - **Decidido con la usuaria para R8:** la razón sustituye al % cuando la hay; si no hay una clara, queda el % de ahora. Sin servidor ni IA: se razona con las líneas del motor que ya hay (`PositionEval.pv` antes y después de la jugada, `score` con mate).
+  - **Antes de codificar R8:** su bloque solo tiene objetivo y pistas; faltan los criterios de aceptación (qué razones y con qué texto exacto). Fijarlos con la usuaria (skill `grilling` si hay que decidir diseño). Es lógica de dominio con casos de ajedrez sutiles (mates, capturas intermedias, sacrificios): si un problema lo pide, la usuaria sube el modelo a mano (ADR-030).
   - **Pistas para R8:** el texto del % es `"drop"` en `src/i18n/es.json:173` (lo pinta `MovePanel`); «Lo mejor era» es `"best"`. Para el material ya hay `sacrifices()` en `src/domain/classify.ts:50` (recorre una línea y cuenta material): reutilizarlo o sacar de ahí un contador. Razones candidatas, de más a menos clara: la mejor daba mate en N; tu jugada permite mate en N; la mejor ganaba material (pieza) en su línea; tu jugada pierde material en la línea del rival. Lógica pura en `src/domain/` con tests primero.
-  - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN. Los e2e no se ven afectados (simulan la API).
+  - **Probar la interfaz aquí:** `preview_start` con `dev` (puerto 5173) → «Ver esta partida» de la portada → «Analizar» (motor real, no necesita la API de chess.com). Para medir el motor: importar `/src/engine/createEngine.ts` y `/src/domain/analysis.ts` desde la consola de la página y cronometrar `analyseGame` (con el panel del navegador oculto los tiempos salen peores).
+  - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN; la página de una partida de chess.com solo se ha visto simulando `fetch`. Los e2e no se ven afectados (simulan la API).
   - **Equipo (Windows, trabajo):** Node 26 en `C:\Program Files\nodejs` (si una sesión no lo ve en el PATH, reiniciar la app de Claude). Playwright con Chromium, Firefox y WebKit instalados. Node ejecuta los `.ts` quitando tipos: un script no puede importar `src/domain/pgn.ts` (usa propiedades de parámetro).
-  - **Verificado en local sobre `chore/r3-release`:** lint, tipos, 322 tests, build, 69 e2e (Chromium + móvil, 1 omitido a propósito), `mutate` 87,90 % (`chesscom.ts` 78,68 % el más flojo, sin tocar).
-  - **Sin hacer:** `ponytail-audit` de todo el repo; pase de Firefox/WebKit en la CI; comprobaciones en producción; etiqueta `v1.0.0`.
-  - **Probado a mano por la usuaria:** el servidor de desarrollo (`npm run dev`, puerto 5173, configuración `dev` de `.claude/launch.json`) con un PGN pegado.
-  - **R4 (rama `feat/home-and-review-layout`, sale de `chore/r3-release`):** portada rediseñada y partida en dos columnas (ver el bloque R4 y `docs/DESIGN.md` › Disposición). `AnalysisSummary` ahora solo lleva la precisión; el recuento de etiquetas es `LabelCounts` (mismo archivo). `GameViewer` acepta `children` (los datos de la partida). Tokens nuevos: `--page-wide`, `--board-max`, `--side-min`. La página de una partida de chess.com solo se ha visto aquí simulando `fetch` en el navegador (la red bloquea la API). Verificado en local: lint, tipos, 323 tests, build, 69 e2e (`--workers=1`).
-- **Recta final (ADR-030):** lo que quedaba de M5–M7 se hace en tres PR (R1, R2, R3). El roadmap se actualiza dentro del PR de cada uno; ya no hay PR solo de roadmap ni cierre por hito.
-- **Entregado en R1 (dominio, sin interfaz nueva):**
-  - `Eval.second` (segunda línea de MultiPV; quitado en R5, ADR-031: ahora la da una segunda búsqueda en `analyseGame`).
-  - `analyseGame` devuelve `PositionEval[]` (`score` desde blancas, `pv`, `second`). La caché pasa a `analysis:v2:` (los análisis guardados con `v1` se repiten).
-  - `src/domain/accuracy.ts`: `moveAccuracy`, `winDrops`, `gameAccuracy` (fórmula de lichess, con su `+1`).
-  - `src/domain/classify.ts`: `classifyGame(positions, evals, book)` → etiqueta por jugada; `THRESHOLDS`; `MOVE_LABELS` y `MoveLabel` viven aquí (antes en `MoveBadge`).
-  - `src/domain/openings.ts`: `loadBook()` (import dinámico de `src/data/openings.json`), `inBook`, `openingName`. El JSON se regenera con `npm run build:openings`.
-  - `GameViewer` solo se adapta al tipo nuevo: todavía no muestra etiquetas, precisión ni apertura (R2).
-- **Límites de R1:** los nombres de apertura están en inglés (así vienen en lichess-org/chess-openings); «brillante» y «gran jugada» sin calibrar con partidas reales (`shortcut:` en `classify.ts`); la única jugada legal no lleva etiqueta pero sí cuenta en la precisión, como en lichess.
-- **Entregado en R2 (interfaz):**
-  - `GameViewer` calcula el informe (`classifyGame`, `winDrops`, `gameAccuracy`) solo con el análisis terminado y carga el libro al montar.
-  - `MoveList` con la etiqueta de cada jugada; nombre de la apertura sobre la lista.
-  - `EvalGraph` (SVG, `role="slider"`, descrito por el resumen; el clic salta a la jugada y las flechas son las del visor).
-  - `MovePanel`: etiqueta, % perdido, mejor alternativa con flecha en el tablero (`Board` acepta `arrow`) y su línea navegable (`src/domain/line.ts`, `playLine`). Al cambiar de jugada se sale de la línea.
-  - `AnalysisSummary`: precisión por bando y recuento de etiquetas.
-  - Tema: `src/ui/theme.ts` + botón «Modo claro» en `App` (sigue al sistema hasta que se elige; se guarda en `localStorage`). Playwright corre en oscuro salvo `report.spec.ts`, que prueba el claro con axe.
-  - Animaciones: `@keyframes enter` en `base.css` para cada pantalla (`main`) y para el resumen; con `prefers-reduced-motion` las duraciones son 0.
-- **Límites de R2:** la barra sigue mostrando el mate como «#3», no «M3»; sin transición animada entre pantallas más allá de la entrada; el gráfico no se ha visto con partidas de 300 jugadas; no probado con lector de pantalla real; skill `frontend-design` no disponible en la sesión que lo hizo.
-- **Entregado en R3:** `README.md` con atribuciones, página «Acerca de» (`/acerca`, enlazada desde la barra) con el código fuente y la versión exacta del motor, versión `1.0.0` en `package.json`. `ponytail-debt`: 12 marcadores `shortcut:`, todos con límite y cuándo mejorarlo.
-- **Navegadores, en este equipo (Windows):** Chromium y móvil en verde (69 e2e). Firefox no arranca (`spawn UNKNOWN` al lanzar `firefox.exe`). En WebKit fallan los tests que usan el motor real (el Worker da error) y el de teclado pierde la primera pulsación; las dos cosas pasan igual en `main`, así que no vienen de R1–R3, pero el pase de verdad queda para el job manual de la CI (Linux), donde antes pasaban.
+  - **Verificado en local en R7:** lint, tipos, 332 tests, build y e2e Chromium + móvil con `--workers=1` (160/160 en 5 repeticiones de `home`, `styleguide` y `report`). El fixture de axe (`tests/e2e/fixtures.ts`) espera ahora a las animaciones: antes fallaba al azar con un `color-contrast` falso. `mutate` por última vez en R3: 87,90 % (`chesscom.ts` 78,68 %, el más flojo).
+  - **Sin hacer para v1.0:** los pasos 3–6 de abajo, que son de la usuaria, y `ponytail-audit` de todo el repo.
+- **Recta final (ADR-030):** el roadmap se actualiza dentro del PR de cada tarea; no hay PR solo de roadmap ni cierre por hito.
+- **Límites conocidos de R1–R7:** nombres de apertura en inglés (vienen así de lichess-org/chess-openings); «brillante» y «gran jugada» sin calibrar con partidas reales (`shortcut:` en `classify.ts`); la única jugada legal no lleva etiqueta pero sí cuenta en la precisión, como en lichess; la barra muestra el mate como «#3», no «M3»; el gráfico no se ha visto con partidas de 300 jugadas; sin probar con lector de pantalla real; la caché de análisis es `analysis:v2:` (los análisis `v1` se repiten); el glifo de la etiqueta en la lista mide 9,6 px (el nombre completo está en el panel de la jugada).
+- **Navegadores, en este equipo (Windows):** Chromium y móvil en verde. Firefox no arranca (`spawn UNKNOWN` al lanzar `firefox.exe`). En WebKit fallan los tests que usan el motor real (el Worker da error) y el de teclado pierde la primera pulsación; pasa igual en versiones anteriores de `main`. El pase de verdad queda para el job manual de la CI (Linux).
 - **Deuda aceptada, sigue en pie:**
-  - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`. Sin comprobar que producción sirva el `.wasm` como `application/wasm` ni `crossOriginIsolated` en Cloudflare: mirarlo en R3.
+  - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`. Sin comprobar que producción sirva el `.wasm` como `application/wasm` ni `crossOriginIsolated` en Cloudflare (paso 4 de v1.0).
   - Hallazgos de auditoría sin tarea: `UserPage` sigue descargando meses al salir y `?months=999` carga todo el historial; «Cargar mes anterior» puede pisar la lista si se cambia de mes mientras carga; `findGame` baja meses sin cancelar; un solo timeout de 15 s para petición y cuerpo; `new Worker` que lanza síncrono con el motor full no vuelve a lite; `cachedWasm` no revalida el hash; `moveCount` se recalcula en cada render de `GameCard`; código sin uso (`movetime`, `Game.rated`).
   - e2e con Playwright en paralelo falla a veces por carga en local (pasa con `--workers=1`).
   - En móvil (375 px) un movimiento como `O-O-O` con reloj y evaluación se parte en dos líneas (el guion es un punto de corte). Ya pasaba antes de R7, y R7 lo reduce; arreglo posible: `white-space: nowrap` en la jugada.
@@ -58,7 +36,7 @@
 
 ## Hecho
 
-M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducción · M4 Motor robusto (PR #1–#73). Decisiones en ADR-001 a ADR-032.
+M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducción · M4 Motor robusto (PR #1–#73) · R1–R7 (PR #75–#81). Decisiones en ADR-001 a ADR-032.
 
 ---
 
@@ -125,7 +103,7 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Dado un fallo en una posición, entonces no se informa nada más.
 **Tests:** U (`EnginePool`, `analyseGame` en paralelo, ajustes).
 
-### R7 · Etiqueta en la esquina de cada jugada — `en review`
+### R7 · Etiqueta en la esquina de cada jugada — `hecha`
 **Objetivo:** que el estado de cada jugada (libro, mejor, brillante…) se vea de un vistazo.
 - El icono de la etiqueta va arriba a la derecha de la casilla de cada jugada en la lista.
 **Aceptación:**
@@ -140,7 +118,7 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 
 ### v1.0 · Publicar — `pendiente` (pasos de la usuaria)
 1. ~~Desbloquear la cuenta de GitHub y relanzar la CI.~~ Hecho.
-2. ~~Squash merge de R1–R4.~~ Hecho (#75 y #78).
+2. ~~Squash merge de R1–R7.~~ Hecho (#75, #78, #79, #80 y #81).
 3. Lanzar el job manual de CI con todos los navegadores (`all_browsers`) sobre `main` y corregir lo que salga.
 4. En producción: comprobar que `/engine/stockfish-19-lite-single.wasm` se sirve como `application/wasm` y que `crossOriginIsolated` es `true`.
 5. `git tag v1.0.0 && git push origin v1.0.0`.
