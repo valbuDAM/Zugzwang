@@ -23,17 +23,30 @@
 }
 
 .move-list button {
+  position: relative; /* anchors the label badge in the corner */
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
   min-block-size: 1.5rem; /* WCAG 2.2 target size: 24px */
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-5) var(--space-1) var(--space-2); /* end room for the badge: it never covers the clock or the evaluation */
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: start;
+}
+
+/* The label sits in the top-right corner of its move, smaller than elsewhere. The ring keeps it apart from
+   the highlighted move. */
+.move-list .move-badge {
+  position: absolute;
+  inset-block-start: var(--space-1);
+  inset-inline-end: var(--space-1);
+  inline-size: var(--space-4);
+  block-size: var(--space-4);
+  font-size: 0.6em;
+  box-shadow: 0 0 0 1px var(--color-bg);
 }
 
 .move-list button:hover {

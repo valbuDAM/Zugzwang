@@ -40,6 +40,20 @@ test('an analysed game shows its report: labels, better line with its arrow, gra
   await expect(page.getByRole('row', { name: /Error grave/ })).toContainText('1');
   await expect(page.getByText(/Wayward Queen Attack/)).toBeAttached();
 
+  // In the move list the label sits in the top-right corner of its own move, clear of the move's text.
+  const folded = page.locator('details.game-viewer-moves'); // on narrow screens the list starts folded
+  if ((await folded.getAttribute('open')) === null) await folded.getByText('Jugadas', { exact: true }).click();
+  const move = page.getByRole('list', { name: 'Jugadas' }).getByRole('button', { name: /Nf6/ });
+  const [cell, badge, san] = await Promise.all([
+    move.boundingBox(),
+    move.getByRole('img', { name: 'Error grave' }).boundingBox(),
+    move.locator('span').first().boundingBox(),
+  ]);
+  if (!cell || !badge || !san) throw new Error('move not laid out');
+  expect(badge.x + badge.width).toBeLessThanOrEqual(cell.x + cell.width);
+  expect(badge.y).toBeLessThan(cell.y + cell.height / 2);
+  expect(badge.x).toBeGreaterThanOrEqual(san.x + san.width);
+
   // A click a third of the way along the graph lands on a move of the first half.
   const graph = page.getByRole('slider', { name: 'Gráfico de evaluación' });
   const box = await graph.boundingBox();

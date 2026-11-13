@@ -39,6 +39,16 @@ it('shows the evaluation of each move when there is one', () => {
   expect(screen.getByRole('button', { name: /Nf3/ })).toHaveTextContent('+0,1');
 });
 
+it('puts each label inside its own move, with its name, and none on unlabelled moves', () => {
+  render(<MoveList positions={positions} ply={0} labels={[null, 'book', 'blunder']} onSelect={() => {}} />);
+
+  expect(within(screen.getByRole('button', { name: /e4/ })).getByRole('img', { name: 'Libro' })).toBeInTheDocument();
+  expect(
+    within(screen.getByRole('button', { name: /e5/ })).getByRole('img', { name: 'Error grave' }),
+  ).toBeInTheDocument();
+  expect(within(screen.getByRole('button', { name: /Nf3/ })).queryByRole('img')).not.toBeInTheDocument();
+});
+
 it('only re-renders the move whose evaluation just arrived', () => {
   const onSelect = () => {};
   const cp = (n: number) => ({ kind: 'cp' as const, cp: n });

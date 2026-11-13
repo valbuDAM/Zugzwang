@@ -1,19 +1,20 @@
 ﻿# Roadmap — Zugzwang
 
-▶ Siguiente tarea: R7 (etiqueta en la esquina de cada jugada)
+▶ Siguiente tarea: R8 (explicar por qué era mejor la alternativa)
 
 ## Notas de traspaso (tarea en curso)
 
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
-- **Estado al pausar (12-11-2026):**
-  - R1–R6 ya están en `main` (#75, #78, #79, #80). **Pausado por la usuaria antes de empezar R7.** La rama de R7 ya existe: `feat/move-badge-corner` (sale de `main` tras #80 y solo lleva esta nota). Retomar ahí; R8 en otra rama desde `main` cuando R7 esté fusionado.
+- **Estado al pausar (13-11-2026):**
+  - R1–R6 ya están en `main` (#75, #78, #79, #80). R7 está hecha en la rama `feat/move-badge-corner` (PR abierto, pendiente de CI y de que la usuaria lo revise y haga squash merge). R8 en otra rama desde `main` cuando R7 esté fusionado.
+  - **R7:** solo CSS en `src/ui/MoveList.css`: el botón de cada jugada es `position: relative` con `padding-inline-end` para que el icono no tape el reloj ni la evaluación, y `.move-list .move-badge` va absoluto arriba a la derecha (16 px, aro del color del fondo para separarlo de la jugada resaltada). `MoveBadge.tsx/.css` no cambia, así que `MovePanel`, `AnalysisSummary` y `Home` siguen igual. Comprobado en el navegador con la partida de muestra analizada: 50 etiquetas dentro de su botón, a 4 px de la esquina, sin solape, en escritorio y en móvil (375 px, sin scroll horizontal). Límite: a 9,6 px el glifo es pequeño; el nombre completo sigue en el panel de la jugada y en el nombre accesible. `report.spec.ts` fija la colocación (caja del icono dentro de la esquina superior derecha y fuera del texto de la jugada).
+  - **Pruebas inestables arregladas de paso:** dos pasadas completas de e2e fallaron cada una en una prueba distinta (`home.spec.ts` en móvil, `styleguide.spec.ts`) con `color-contrast` de axe, porque axe leía el texto a medias de la animación de entrada (`@keyframes enter`, de R2). `tests/e2e/fixtures.ts` espera ahora a `document.getAnimations()` antes de axe (commit aparte). 160/160 en 5 repeticiones de home, styleguide y report (Chromium + móvil).
   - **R5 (#79):** análisis sin MultiPV (ADR-031). `analyseGame` pide la segunda puntuación con una búsqueda `searchmoves` solo donde se jugó la mejor jugada. La caché sigue en `analysis:v2:`.
   - **R6 (#80):** varios motores de un hilo en paralelo (ADR-032). `EnginePool` (`src/domain/engine/EnginePool.ts`) implementa `Engine` y expone `parallel`; `analyseGame` abre una «calle» por motor y solo informa el prefijo en orden. `AnalysisSettings` gana `engines`. Medido en el navegador de este equipo (12 núcleos, partida de la Ópera, profundidad 16): de ~45 s a 11,3 s; la primera jugada aparece a los 2 s. Sin probar con una partida real del perfil de chess.com (esta red bloquea la API), ni en móvil, Firefox o WebKit.
   - **Medir el motor en el navegador:** `preview_start` con `dev`, pegar un PGN y, en la consola de la página, importar `/src/engine/createEngine.ts` y `/src/domain/analysis.ts` (Vite los sirve) y cronometrar `analyseGame`. Con el panel del navegador oculto los tiempos pueden salir peores.
   - **Pedido por la usuaria tras R6 (12-11-2026), con sus palabras:** «el icono de libro, mejor, excelente, brillante, etc. tiene que ir arriba a la derecha de cada casilla de cada movimiento, para que esté claro el estado» (R7) e «investigar si fuera posible poner, en vez del porcentaje, por qué era mejor razonándolo» (R8). Pide la implementación más simple posible y revisar con cuidado el código; si hay dudas, preguntarle.
   - **Decidido con la usuaria para R8:** la razón sustituye al % cuando la hay; si no hay una clara, queda el % de ahora. Sin servidor ni IA: se razona con las líneas del motor que ya hay (`PositionEval.pv` antes y después de la jugada, `score` con mate).
-  - **Pistas para R7:** `MoveBadge` (`src/ui/MoveBadge.tsx` + `.css`) se pinta en `MoveList.tsx:50`, junto a la jugada; también se usa en `MovePanel`, `AnalysisSummary` y `Home`, que no deben cambiar. Lo previsible: la casilla de la jugada `position: relative` y el icono absoluto en su esquina superior derecha, solo en la lista. Usar la skill `frontend-design` y los tokens de `tokens.css`; el icono no puede tapar la jugada ni perder su nombre accesible.
   - **Pistas para R8:** el texto del % es `"drop"` en `src/i18n/es.json:173` (lo pinta `MovePanel`); «Lo mejor era» es `"best"`. Para el material ya hay `sacrifices()` en `src/domain/classify.ts:50` (recorre una línea y cuenta material): reutilizarlo o sacar de ahí un contador. Razones candidatas, de más a menos clara: la mejor daba mate en N; tu jugada permite mate en N; la mejor ganaba material (pieza) en su línea; tu jugada pierde material en la línea del rival. Lógica pura en `src/domain/` con tests primero.
   - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN. Los e2e no se ven afectados (simulan la API).
   - **Equipo (Windows, trabajo):** Node 26 en `C:\Program Files\nodejs` (si una sesión no lo ve en el PATH, reiniciar la app de Claude). Playwright con Chromium, Firefox y WebKit instalados. Node ejecuta los `.ts` quitando tipos: un script no puede importar `src/domain/pgn.ts` (usa propiedades de parámetro).
@@ -45,6 +46,7 @@
   - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`. Sin comprobar que producción sirva el `.wasm` como `application/wasm` ni `crossOriginIsolated` en Cloudflare: mirarlo en R3.
   - Hallazgos de auditoría sin tarea: `UserPage` sigue descargando meses al salir y `?months=999` carga todo el historial; «Cargar mes anterior» puede pisar la lista si se cambia de mes mientras carga; `findGame` baja meses sin cancelar; un solo timeout de 15 s para petición y cuerpo; `new Worker` que lanza síncrono con el motor full no vuelve a lite; `cachedWasm` no revalida el hash; `moveCount` se recalcula en cada render de `GameCard`; código sin uso (`movetime`, `Game.rated`).
   - e2e con Playwright en paralelo falla a veces por carga en local (pasa con `--workers=1`).
+  - En móvil (375 px) un movimiento como `O-O-O` con reloj y evaluación se parte en dos líneas (el guion es un punto de corte). Ya pasaba antes de R7, y R7 lo reduce; arreglo posible: `white-space: nowrap` en la jugada.
 - **Avisos:**
   - `stryker.config.json` lleva `"tsconfigFile": "none.json"` a propósito (Stryker no soporta TypeScript 7). Si reaparecen sandboxes en `.stryker-tmp`, quitar primero los junctions con `rmdir`.
   - Los hooks de `.claude/` y todos los comandos necesitan Node ≥ 24 en el PATH.
@@ -123,9 +125,13 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Dado un fallo en una posición, entonces no se informa nada más.
 **Tests:** U (`EnginePool`, `analyseGame` en paralelo, ajustes).
 
-### R7 · Etiqueta en la esquina de cada jugada — `pendiente`
+### R7 · Etiqueta en la esquina de cada jugada — `en review`
 **Objetivo:** que el estado de cada jugada (libro, mejor, brillante…) se vea de un vistazo.
 - El icono de la etiqueta va arriba a la derecha de la casilla de cada jugada en la lista.
+**Aceptación:**
+- Dada una partida analizada, cuando miro la lista, entonces cada jugada con etiqueta lleva su icono en la esquina superior derecha de su casilla, sin tapar la jugada, el reloj ni la evaluación, en escritorio y en móvil.
+- Dado un lector de pantalla, cuando llega a una jugada, entonces sigue oyendo el nombre de la etiqueta.
+**Tests:** C (la etiqueta va dentro de su jugada y con su nombre; las jugadas sin etiqueta no llevan icono) · colocación comprobada en el navegador (jsdom no calcula la maquetación).
 **Skills:** frontend-design.
 
 ### R8 · Por qué era mejor — `pendiente`
