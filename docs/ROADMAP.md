@@ -7,8 +7,9 @@
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
 - **Estado al pausar (13-11-2026):**
-  - R1–R8 en `main` (#75–#83). **Limpieza para v1.0 hecha** en la rama `chore/v1-cleanup` (ADR-034), con PR abierto. Falta que pase la CI y que la usuaria lo revise y haga squash merge.
-  - **GitHub Actions vuelve a estar bloqueado por facturación** (13-11-2026): los jobs no llegan a arrancar («account is locked due to a billing issue») y los últimos pushes a `main` salen en rojo por eso, no por el código.
+  - R1–R8 en `main` (#75–#83). **Limpieza para v1.0 hecha** en la rama `chore/v1-cleanup` (ADR-034), PR [#84](https://github.com/valbuDAM/Zugzwang/pull/84). Falta que pase la CI y que la usuaria lo revise y haga squash merge.
+  - **GitHub Actions vuelve a estar bloqueado por facturación** (13-11-2026): los jobs no llegan a arrancar («account is locked due to a billing issue») y los últimos pushes a `main` salen en rojo por eso, no por el código. **La usuaria ha abierto un ticket a GitHub Support** (13-11-2026): el repo es público y Actions no debería cobrar nada.
+  - **Para retomar:** 1) ¿respondió GitHub al ticket? Comprobar si Actions arranca: `gh pr checks 84` y, si sigue en rojo, leer las anotaciones del job (`gh api repos/valbuDAM/Zugzwang/check-runs/<job>/annotations`). 2) Con la cuenta desbloqueada, relanzar la CI del #84 (`gh run rerun <run> --failed`). 3) En verde: revisar en local y squash merge. 4) Seguir con [Reflow a 320 px](#reflow-a-320-px--pendiente).
   - **Producción comprobada (13-11-2026)** en https://chessanalyzer.bvalbuena06.workers.dev/: `crossOriginIsolated` es `true`, llegan COOP y COEP, el `.wasm` se sirve como `application/wasm` y las rutas internas responden 200 (fallback SPA). Cloudflare Workers Builds despliega cada push a `main`.
   - **Probar la interfaz aquí:** `preview_start` con `dev` (puerto 5173) → «Ver esta partida» de la portada → «Analizar» (motor real, no necesita la API de chess.com). Para medir el motor: importar `/src/engine/createEngine.ts` y `/src/domain/analysis.ts` desde la consola de la página y cronometrar `analyseGame` (con el panel del navegador oculto los tiempos salen peores).
   - **Esta red bloquea `api.chess.com`** (filtro FortiGuard, categoría «Games»): la búsqueda por usuario falla aquí con un error de CORS; no se rodea. En este equipo la app solo se prueba pegando un PGN; la página de una partida de chess.com solo se ha visto simulando `fetch`. Los e2e no se ven afectados (simulan la API).
@@ -21,7 +22,7 @@
   - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`.
   - Hallazgos de auditoría sin tarea: `UserPage` sigue descargando meses al salir y `?months=999` carga todo el historial; «Cargar mes anterior» puede pisar la lista si se cambia de mes mientras carga; `findGame` baja meses sin cancelar; un solo timeout de 15 s para petición y cuerpo; `new Worker` que lanza síncrono con el motor full no vuelve a lite; `cachedWasm` no revalida el hash; `moveCount` se recalcula en cada render de `GameCard`.
   - e2e con Playwright en paralelo falla a veces por carga en local (pasa con `--workers=1`).
-  - **A 320 px hay scroll horizontal** (WCAG 1.4.10, ya pasaba antes de la limpieza): la portada mide 336 px, «Acerca de» 325 px y la partida analizada 342 px (las dos placas de precisión necesitan 306 px y hay 248). Los e2e de móvil usan un Pixel 7 (412 px). Paso 3 de v1.0.
+  - **A 320 px hay scroll horizontal** (WCAG 1.4.10, ya pasaba antes de la limpieza). Tarea propia: [Reflow a 320 px](#reflow-a-320-px--pendiente), paso 3 de v1.0.
   - Sin la hoja de estilo, axe ya no revisa en los dos temas las etiquetas que no salen en las partidas de los e2e («brillante», «gran jugada»…); los contrastes medidos están en `DESIGN.md`.
   - En móvil (375 px), con reloj y evaluación, la fila de un `O-O-O` sale unos 9 px más ancha que las demás (antes se partía en dos líneas).
 - **Avisos:** los hooks de `.claude/` y todos los comandos necesitan Node ≥ 24 en el PATH. Sin mutation testing desde ADR-034 (Stryker no soporta TypeScript 7).
@@ -55,10 +56,20 @@
 - Dado un PGN de lichess con `[Variant "From Position"]`, entonces se analiza.
 **Tests:** U (`moveNumber`, `From Position`) · C (botón de tema y fundido, lista desde un FEN) · E (tema en los dos sentidos con axe) · móvil comprobado en el navegador.
 
+### Reflow a 320 px — `pendiente`
+**Objetivo:** que ninguna página tenga scroll horizontal a 320 px de ancho (WCAG 1.4.10, que el README promete). Ya pasaba antes de la limpieza. Rama `fix/reflow-320` desde `main`, tras el merge del #84; con frontend-design.
+- Medido el 13-11-2026 (ancho del documento a 320 px): portada 336 px, «Acerca de» 325 px y partida analizada 342 px.
+- En la partida, el culpable es `.analysis-summary-accuracy`: las dos placas de precisión necesitan 306 px y hay 248. En la portada y en «Acerca de» falta localizar qué elemento desborda.
+- Los e2e de móvil usan un Pixel 7 (412 px), por eso no lo han visto.
+**Aceptación:**
+- Dado un ancho de 320 px, en la portada, «Acerca de» y la partida analizada, en los dos temas, entonces no hay scroll horizontal (`scrollWidth` ≤ `clientWidth`) y no se corta ningún texto.
+- A 375 px y en escritorio, todo sigue como está.
+**Tests:** E (las tres páginas a 320 px comprueban `scrollWidth` ≤ `clientWidth`, con axe).
+
 ### v1.0 · Publicar — `pendiente` (pasos de la usuaria)
-1. Desbloquear otra vez la cuenta de GitHub (facturación, 13-11-2026) y relanzar la CI del PR de limpieza.
+1. Desbloquear otra vez la cuenta de GitHub (facturación, 13-11-2026; ticket abierto a GitHub Support) y relanzar la CI del PR de limpieza (#84).
 2. Squash merge del PR de limpieza.
-3. Quitar el scroll horizontal a 320 px (portada, «Acerca de» y partida analizada; ver deuda). Tarea propia, con frontend-design.
+3. [Reflow a 320 px](#reflow-a-320-px--pendiente) (tarea propia, con su PR).
 4. Lanzar el job manual de CI con todos los navegadores (`all_browsers`) sobre `main` y corregir lo que salga.
 5. ~~En producción: `.wasm` como `application/wasm` y `crossOriginIsolated`.~~ Hecho (13-11-2026).
 6. `git tag v1.0.0 && git push origin v1.0.0` y crear la release con sus notas (`gh release create v1.0.0 --generate-notes`).
