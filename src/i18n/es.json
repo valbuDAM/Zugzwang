@@ -163,7 +163,8 @@
     "inaccuracy": "Imprecisión",
     "mistake": "Error",
     "blunder": "Error grave",
-    "miss": "Oportunidad perdida"
+    "miss": "Oportunidad perdida",
+    "mate": "Jaque mate"
   },
   "graph": {
     "label": "Gráfico de evaluación"

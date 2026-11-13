@@ -7,7 +7,7 @@
 > Lo primero que se lee tras un `/clear`. Se reescribe al cerrar o pausar cada tarea. El detalle de las tareas ya hechas está en el historial de git y en `docs/DECISIONS.md`.
 
 - **Estado al pausar (13-11-2026):**
-  - R1–R7 ya están en `main` (#75, #78, #79, #80, #81). **Siguiente: R8**, en la rama `feat/move-reason` (sale de `main` tras #81; esta nota es su primer commit, sin push todavía). La usuaria cambia de modelo y hace `/clear` antes de empezar.
+  - R1–R7 ya están en `main` (#75, #78, #79, #80, #81). **R7b** (insignias en el tablero, mate e icono) está hecha en la rama `feat/board-badges`, con PR abierto: falta que la usuaria lo revise y haga squash merge. **Siguiente: R8.** La rama local `feat/move-reason` solo tenía el commit de estas notas, que ya va dentro del PR de R7b: tras el merge, borrarla y crearla de nuevo desde `main`.
   - **Pedido de la usuaria para R8 (12-11-2026), con sus palabras:** «investigar si fuera posible poner, en vez del porcentaje, por qué era mejor razonándolo». Pide la implementación más simple posible y revisar con cuidado el código; si hay dudas, preguntarle.
   - **Decidido con la usuaria para R8:** la razón sustituye al % cuando la hay; si no hay una clara, queda el % de ahora. Sin servidor ni IA: se razona con las líneas del motor que ya hay (`PositionEval.pv` antes y después de la jugada, `score` con mate).
   - **Antes de codificar R8:** su bloque solo tiene objetivo y pistas; faltan los criterios de aceptación (qué razones y con qué texto exacto). Fijarlos con la usuaria (skill `grilling` si hay que decidir diseño). Es lógica de dominio con casos de ajedrez sutiles (mates, capturas intermedias, sacrificios): si un problema lo pide, la usuaria sube el modelo a mano (ADR-030).
@@ -18,12 +18,13 @@
   - **Verificado en local en R7:** lint, tipos, 332 tests, build y e2e Chromium + móvil con `--workers=1` (160/160 en 5 repeticiones de `home`, `styleguide` y `report`). El fixture de axe (`tests/e2e/fixtures.ts`) espera ahora a las animaciones: antes fallaba al azar con un `color-contrast` falso. `mutate` por última vez en R3: 87,90 % (`chesscom.ts` 78,68 %, el más flojo).
   - **Sin hacer para v1.0:** los pasos 3–6 de abajo, que son de la usuaria, y `ponytail-audit` de todo el repo.
 - **Recta final (ADR-030):** el roadmap se actualiza dentro del PR de cada tarea; no hay PR solo de roadmap ni cierre por hito.
-- **Límites conocidos de R1–R7:** nombres de apertura en inglés (vienen así de lichess-org/chess-openings); «brillante» y «gran jugada» sin calibrar con partidas reales (`shortcut:` en `classify.ts`); la única jugada legal no lleva etiqueta pero sí cuenta en la precisión, como en lichess; la barra muestra el mate como «#3», no «M3»; el gráfico no se ha visto con partidas de 300 jugadas; sin probar con lector de pantalla real; la caché de análisis es `analysis:v2:` (los análisis `v1` se repiten); el glifo de la etiqueta en la lista mide 9,6 px (el nombre completo está en el panel de la jugada).
+- **Límites conocidos de R1–R7:** nombres de apertura en inglés (vienen así de lichess-org/chess-openings); «brillante» y «gran jugada» sin calibrar con partidas reales (`shortcut:` en `classify.ts`); la única jugada legal no lleva etiqueta pero sí cuenta en la precisión, como en lichess; la barra muestra el mate como «#3», no «M3»; el gráfico no se ha visto con partidas de 300 jugadas; sin probar con lector de pantalla real; la caché de análisis es `analysis:v2:` (los análisis `v1` se repiten); el glifo de la etiqueta en la lista mide 9,6 px (el nombre completo está en el panel de la jugada); en el tablero, a 375 px, la insignia mide 14,5 px; el icono es solo SVG (sin PNG para iOS ni `favicon.ico`); el lector de pantalla oye el mate como el «#» de la jugada, no como «jaque mate».
 - **Navegadores, en este equipo (Windows):** Chromium y móvil en verde. Firefox no arranca (`spawn UNKNOWN` al lanzar `firefox.exe`). En WebKit fallan los tests que usan el motor real (el Worker da error) y el de teclado pierde la primera pulsación; pasa igual en versiones anteriores de `main`. El pase de verdad queda para el job manual de la CI (Linux).
 - **Deuda aceptada, sigue en pie:**
   - Previews de Cloudflare apagadas (bug [cloudflare/workers-sdk#15682](https://github.com/cloudflare/workers-sdk/issues/15682)): la interfaz se revisa en local con `npm run build && npx vite preview`. Sin comprobar que producción sirva el `.wasm` como `application/wasm` ni `crossOriginIsolated` en Cloudflare (paso 4 de v1.0).
   - Hallazgos de auditoría sin tarea: `UserPage` sigue descargando meses al salir y `?months=999` carga todo el historial; «Cargar mes anterior» puede pisar la lista si se cambia de mes mientras carga; `findGame` baja meses sin cancelar; un solo timeout de 15 s para petición y cuerpo; `new Worker` que lanza síncrono con el motor full no vuelve a lite; `cachedWasm` no revalida el hash; `moveCount` se recalcula en cada render de `GameCard`; código sin uso (`movetime`, `Game.rated`).
   - e2e con Playwright en paralelo falla a veces por carga en local (pasa con `--workers=1`).
+  - En móvil (375 px) las letras de las columnas del tablero quedan corridas una casilla a la derecha (la «a» bajo la columna b): chessground las coloca con `left: 24px` fijo. Ya pasaba antes de R7b; arreglo posible: `left: 0` en `.board coords.files` y alinear el texto.
   - En móvil (375 px) un movimiento como `O-O-O` con reloj y evaluación se parte en dos líneas (el guion es un punto de corte). Ya pasaba antes de R7, y R7 lo reduce; arreglo posible: `white-space: nowrap` en la jugada.
 - **Avisos:**
   - `stryker.config.json` lleva `"tsconfigFile": "none.json"` a propósito (Stryker no soporta TypeScript 7). Si reaparecen sandboxes en `.stryker-tmp`, quitar primero los junctions con `rmdir`.
@@ -110,6 +111,17 @@ M0 Base · M1 Tracer bullet · M2 Carga de partidas · M3 Tablero y reproducció
 - Dada una partida analizada, cuando miro la lista, entonces cada jugada con etiqueta lleva su icono en la esquina superior derecha de su casilla, sin tapar la jugada, el reloj ni la evaluación, en escritorio y en móvil.
 - Dado un lector de pantalla, cuando llega a una jugada, entonces sigue oyendo el nombre de la etiqueta.
 **Tests:** C (la etiqueta va dentro de su jugada y con su nombre; las jugadas sin etiqueta no llevan icono) · colocación comprobada en el navegador (jsdom no calcula la maquetación).
+**Skills:** frontend-design.
+
+### R7b · Etiqueta en la casilla del tablero, mate e icono — `hecha`
+**Objetivo:** ver en el propio tablero qué tal fue la jugada (pedido de la usuaria, 13-11-2026, con capturas de chess.com).
+- La etiqueta de la jugada va en la esquina superior derecha de la casilla a la que llegó la pieza; el rey que recibe mate lleva un `#` rojo. Icono de la app (`public/favicon.svg`).
+**Aceptación:**
+- Dada una partida analizada, cuando voy a una jugada con etiqueta, entonces su insignia aparece en la casilla de destino (en el enroque, la del rey), también con el tablero girado y en móvil.
+- Dada una jugada de mate, analizada o no la partida, entonces el rey que lo recibe lleva un `#` rojo.
+- Dada la línea del motor en el tablero, entonces no hay insignias de la partida.
+- Dada la pestaña del navegador, entonces muestra el icono de la app.
+**Tests:** U (`Position.mated`) · C (`Board`: casilla y tablero girado; `GameViewer`: etiqueta, mate, línea del motor, sin analizar) · colocación comprobada en el navegador (escritorio y 375 px).
 **Skills:** frontend-design.
 
 ### R8 · Por qué era mejor — `pendiente`

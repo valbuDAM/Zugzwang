@@ -47,3 +47,7 @@
   --badge-bg: var(--color-label-blunder);
   color: var(--color-on-label-strong);
 }
+.move-badge[data-label="mate"] {
+  --badge-bg: var(--color-label-mate);
+  color: var(--color-on-label-strong);
+}

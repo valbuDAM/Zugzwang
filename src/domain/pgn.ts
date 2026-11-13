@@ -2,7 +2,7 @@ import { castlingSide } from 'chessops/chess';
 import { makeFen } from 'chessops/fen';
 import { makePgn, parseComment, parsePgn, startingPosition } from 'chessops/pgn';
 import { parseSan } from 'chessops/san';
-import { kingCastlesTo, makeUci } from 'chessops/util';
+import { kingCastlesTo, makeSquare, makeUci } from 'chessops/util';
 
 export type Position = {
   fen: string;
@@ -11,6 +11,8 @@ export type Position = {
   uci: string | null;
   /** Seconds left for the player who just moved, from `[%clk]`; null when absent. */
   clock: number | null;
+  /** Square of the king this move checkmated; null when the move is not mate. */
+  mated: string | null;
 };
 
 export type PgnProblem =
@@ -70,7 +72,7 @@ export function parseGamePgn(pgn: string): Position[] {
   const start = startingPosition(game.headers);
   if (start.isErr) throw new PgnError({ kind: 'setup' });
   const pos = start.unwrap();
-  const positions: Position[] = [{ fen: makeFen(pos.toSetup()), san: null, uci: null, clock: null }];
+  const positions: Position[] = [{ fen: makeFen(pos.toSetup()), san: null, uci: null, clock: null, mated: null }];
   for (const node of game.moves.mainline()) {
     const move = parseSan(pos, node.san);
     if (!move)
@@ -79,11 +81,13 @@ export function parseGamePgn(pgn: string): Position[] {
     const side = castlingSide(pos, move);
     const uci = makeUci(side && 'from' in move ? { ...move, to: kingCastlesTo(pos.turn, side) } : move);
     pos.play(move);
+    const king = pos.board.kingOf(pos.turn);
     positions.push({
       fen: makeFen(pos.toSetup()),
       san: node.san,
       uci,
       clock: node.comments?.map((c) => parseComment(c).clock).find((c) => c !== undefined) ?? null,
+      mated: king !== undefined && pos.isCheckmate() ? makeSquare(king) : null,
     });
   }
   return positions;

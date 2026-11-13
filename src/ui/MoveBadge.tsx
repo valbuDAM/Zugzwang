@@ -13,8 +13,11 @@ const icon = (d: string, filled = false) => (
   </svg>
 );
 
+/** What a badge can say: the label of a move, or the checkmate the board marks on the mated king. */
+export type BadgeLabel = MoveLabel | 'mate';
+
 // Annotation glyphs where chess notation has one; small icons otherwise.
-const MARKS: Record<MoveLabel, ReactNode> = {
+const MARKS: Record<BadgeLabel, ReactNode> = {
   brilliant: '!!',
   great: '!',
   best: icon('M8 1.5l1.9 4.1 4.5.5-3.4 3 1 4.4L8 11.3 4 13.5l1-4.4-3.4-3 4.5-.5z', true),
@@ -24,9 +27,10 @@ const MARKS: Record<MoveLabel, ReactNode> = {
   mistake: '?',
   blunder: '??',
   miss: icon('M4.5 4.5l7 7M11.5 4.5l-7 7'),
+  mate: '#',
 };
 
-export function MoveBadge({ label }: { label: MoveLabel }) {
+export function MoveBadge({ label }: { label: BadgeLabel }) {
   const { t } = useTranslation();
   return (
     <span className="move-badge" data-label={label} role="img" aria-label={t(`moveLabel.${label}`)}>

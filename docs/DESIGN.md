@@ -29,7 +29,7 @@ Contraste medido (WCAG): texto principal ≥ 12,5:1; secundario ≥ 5,5:1; lató
 
 ## Etiquetas de jugada
 
-El matiz da el tono; el glifo, el significado. Glifo en `--color-on-label` (`#1c1410`) salvo «error grave» (`--color-on-label-strong`). Todos ≥ 5,3:1.
+El matiz da el tono; el glifo, el significado. Glifo en `--color-on-label` (`#1c1410`) salvo «error grave» y «jaque mate» (`--color-on-label-strong`). Todos ≥ 5,3:1.
 
 | Etiqueta | Marca | Color |
 |---|---|---|
@@ -42,8 +42,13 @@ El matiz da el tono; el glifo, el significado. Glifo en `--color-on-label` (`#1c
 | Error | `?` | `#e0663e` |
 | Error grave | `??` | `#b4283a` |
 | Oportunidad perdida | aspa | `#d46a9c` |
+| Jaque mate (no es una etiqueta de jugada: marca al rey) | `#` | `#c61c2a` |
 
 Componente: `src/ui/MoveBadge.tsx` (`role="img"` con el nombre como etiqueta accesible).
+
+En el tablero (`Board`, prop `marks`): la etiqueta de la jugada va en la esquina superior derecha de la casilla a la que llegó la pieza, y el `#` en la del rey que recibe el mate (se ve sin analizar la partida). Miden un 5 % del ancho del tablero, con un aro `--border-inlay` oscuro para despegarlas de la casilla, y «se posan» cuando la pieza ha llegado. Ocultas a los lectores de pantalla: la línea de estado ya dice la jugada y su etiqueta.
+
+Icono de la app: `public/favicon.svg` (peón de marfil sobre fieltro con la insignia `!!` de latón).
 
 ## Tipografía
 

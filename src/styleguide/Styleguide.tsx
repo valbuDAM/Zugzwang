@@ -50,10 +50,7 @@ export function Styleguide() {
           <div className="sg-table__play">
             <EvalBar whitePercent={demo.white} text={`${demo.eval > 0 ? '+' : ''}${formatNumber(demo.eval, 1)}`} />
             <div className="sg-table__board">
-              <Board fen={FEN} label={t('styleguide.boardLabel')} />
-              <span className="sg-table__badge" key={step}>
-                <MoveBadge label={demo.label} />
-              </span>
+              <Board fen={FEN} label={t('styleguide.boardLabel')} marks={[{ square: 'e3', label: demo.label }]} />
             </div>
           </div>
           <figcaption>{t('styleguide.boardCaption')}</figcaption>

@@ -1,7 +1,42 @@
 /* biome-ignore-all lint/correctness/noUnknownTypeSelector: chessground renders custom elements (cg-board, piece, coords). */
 .board {
+  position: relative;
   inline-size: 100%;
   aspect-ratio: 1;
+  container-type: inline-size; /* the marks are sized from the board's width (cqi) */
+}
+
+.board-squares {
+  inline-size: 100%;
+  block-size: 100%;
+  isolation: isolate; /* chessground's z-indexes stay under the marks */
+}
+
+/* Top-right corner of its square. Physical offsets: the files run left to right whatever the writing direction. */
+.board-mark {
+  position: absolute;
+  top: calc(var(--row) * 12.5%);
+  left: calc((var(--col) + 1) * 12.5%);
+  display: flex; /* no line box around the badge */
+  translate: -100% 0;
+  padding: 0.4cqi;
+  pointer-events: none;
+  /* Lands once the piece has: chessground slides it for about as long. */
+  animation: board-mark-land var(--duration-base) var(--ease-spring) var(--duration-base) backwards;
+}
+
+.board-mark .move-badge {
+  inline-size: 5cqi;
+  block-size: 5cqi;
+  font-size: 3.2cqi;
+  box-shadow: 0 0 0 var(--border-inlay) var(--color-on-label);
+}
+
+@keyframes board-mark-land {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
 }
 
 /* Flat two-tone board: one conic tile covers 2×2 squares, a8 light. */
@@ -19,10 +54,10 @@
 .board coords coord {
   color: var(--color-board-coord-on-dark);
 }
-.board.orientation-white .files coord:nth-child(2n + 1),
-.board.orientation-white .ranks coord:nth-child(2n),
-.board.orientation-black .files coord:nth-child(2n),
-.board.orientation-black .ranks coord:nth-child(2n + 1) {
+.board .orientation-white .files coord:nth-child(2n + 1),
+.board .orientation-white .ranks coord:nth-child(2n),
+.board .orientation-black .files coord:nth-child(2n),
+.board .orientation-black .ranks coord:nth-child(2n + 1) {
   color: var(--color-board-coord-on-light);
 }
 

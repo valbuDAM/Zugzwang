@@ -77,6 +77,34 @@ it('shows the better move as an arrow and walks its line and back', async () => 
   expect(board()).toHaveAttribute('data-arrow', 'g7g6');
 });
 
+// The marks are hidden from assistive tech (the status line says the same in words), so they are read from the DOM.
+const marks = (container: HTMLElement) =>
+  [...container.querySelectorAll('.board-mark')].map(
+    (m) => `${m.getAttribute('data-square')} ${m.querySelector('[data-label]')?.getAttribute('data-label')}`,
+  );
+
+it('marks the square a move landed on with its label, and the mated king in red', async () => {
+  const { container } = await open();
+  expect(marks(container)).toEqual([]);
+  await userEvent.click(screen.getByRole('button', { name: /^Nf6/ }));
+  expect(marks(container)).toEqual(['f6 blunder']);
+
+  // The engine's line is another position: the game's marks do not belong on it.
+  await userEvent.click(screen.getByRole('button', { name: 'Ver la línea' }));
+  expect(marks(container)).toEqual([]);
+
+  await userEvent.keyboard('{End}');
+  expect(marks(container)).toEqual(['f7 best', 'e8 mate']);
+  expect(container.querySelector('.board-mark [data-label="mate"]')).toHaveTextContent('#');
+});
+
+it('marks the mated king before the game is analysed', async () => {
+  await clear();
+  const { container } = render(<GameViewer pgn={PGN} variant="lite-single" />);
+  await userEvent.keyboard('{End}');
+  expect(marks(container)).toEqual(['e8 mate']);
+});
+
 it('leaves the line when the game moves on, and offers none for a best move', async () => {
   await open();
   await userEvent.click(screen.getByRole('button', { name: /^Nf6/ }));

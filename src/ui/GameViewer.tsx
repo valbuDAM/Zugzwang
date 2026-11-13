@@ -13,7 +13,7 @@ import { createEngine, createFullEngine, detectSettings, detectVariant } from '.
 import { type DeepDeps, detectDeep } from '../engine/deep.ts';
 import { formatEval } from '../i18n/format.ts';
 import { AnalysisSummary, LabelCounts } from './AnalysisSummary.tsx';
-import { Board } from './Board.tsx';
+import { Board, type BoardMark } from './Board.tsx';
 import { DeepMode } from './DeepMode.tsx';
 import { EvalBar } from './EvalBar.tsx';
 import { EvalGraph } from './EvalGraph.tsx';
@@ -198,6 +198,10 @@ function Viewer({
   // In the line: the position after `step` of its moves, with the next one as the arrow.
   const shownFen = step === null ? current?.fen : step === 0 ? positions[ply - 1]?.fen : better[step - 1]?.fen;
   const arrow = better[step ?? 0]?.uci;
+  // The game's marks belong to the game's position, not to the engine's line.
+  const marks: BoardMark[] = [];
+  if (step === null && label && current?.uci) marks.push({ square: current.uci.slice(2, 4), label });
+  if (step === null && current?.mated) marks.push({ square: current.mated, label: 'mate' });
 
   const analyse = async () => {
     const abort = new AbortController();
@@ -243,7 +247,7 @@ function Viewer({
           {currentScore && (
             <EvalBar whitePercent={winPercent(currentScore)} text={formatEval(currentScore)} orientation={side} />
           )}
-          <Board fen={shownFen ?? ''} label={t('game.boardLabel')} orientation={side} arrow={arrow} />
+          <Board fen={shownFen ?? ''} label={t('game.boardLabel')} orientation={side} arrow={arrow} marks={marks} />
         </div>
         <p className="game-viewer-status" role="status">
           <span aria-hidden="true">{t('game.move', { current: ply, total: last })}</span>

@@ -112,23 +112,7 @@
 }
 
 .sg-table__board {
-  position: relative;
   flex: 1;
-}
-
-.sg-table__badge {
-  position: absolute;
-  inset-block-start: calc(-1 * var(--space-2));
-  inset-inline-end: calc(-1 * var(--space-2));
-  z-index: 3;
-  animation: sg-pop var(--duration-base) var(--ease-spring);
-}
-
-@keyframes sg-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
-  }
 }
 
 .sg-section {
