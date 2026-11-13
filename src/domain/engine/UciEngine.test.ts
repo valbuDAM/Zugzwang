@@ -111,24 +111,19 @@ describe('UciEngine', () => {
     expect(result).toMatchObject({ score: { kind: 'mate', mate: 1 }, bestMove: 'a1a8' });
   });
 
-  it('uses the default depth, movetime, or both', async () => {
+  it('uses the default depth or the given one', async () => {
     const t = scriptedTransport();
     const engine = new UciEngine(t);
     await engine.analyse(START);
-    await engine.analyse(START, { movetime: 50 });
-    await engine.analyse(START, { depth: 8, movetime: 50 });
-    expect(t.sent.filter((c) => c.startsWith('go'))).toEqual([
-      'go depth 12',
-      'go movetime 50',
-      'go depth 8 movetime 50',
-    ]);
+    await engine.analyse(START, { depth: 8 });
+    expect(t.sent.filter((c) => c.startsWith('go'))).toEqual(['go depth 12', 'go depth 8']);
   });
 
   it('rejects limits that Stockfish would read as "no limit"', async () => {
     const t = scriptedTransport();
     const engine = new UciEngine(t);
-    for (const opts of [{ depth: 0 }, { depth: Number.NaN }, { depth: -3 }, { movetime: 0 }, { depth: 1.5 }]) {
-      await expect(engine.analyse(START, opts)).rejects.toThrow('positive integers');
+    for (const opts of [{ depth: 0 }, { depth: Number.NaN }, { depth: -3 }, { depth: 1.5 }]) {
+      await expect(engine.analyse(START, opts)).rejects.toThrow('positive integer');
     }
     expect(t.sent).toEqual([]);
   });

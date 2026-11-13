@@ -3,9 +3,9 @@
 Analizador de partidas de chess.com con Stockfish 19 en el navegador (WASM), sin servidor de análisis. Una sola desarrolladora, plan Pro: **cada token cuenta**.
 
 - **Idioma:** conversación y docs en español; código, identificadores y commits en inglés.
-- **Stack:** Vite + React 19 + TS estricto · chessops (reglas/PGN) · chessground (tablero) · SVG propio (gráfico) · i18next · idb-keyval · wouter · Biome · Vitest + Testing Library · Playwright + axe · GitHub Actions · Cloudflare Pages. Licencia GPL-3.0.
+- **Stack:** Vite + React 19 + TS estricto · chessops (reglas/PGN) · chessground (tablero) · SVG propio (gráfico) · i18next · idb-keyval · wouter · Biome · Vitest + Testing Library · Playwright + axe · GitHub Actions · Cloudflare Workers (assets estáticos, https://chessanalyzer.bvalbuena06.workers.dev/). Licencia GPL-3.0.
 - **Fuentes de verdad:** progreso → `docs/ROADMAP.md` · decisiones → `docs/DECISIONS.md` (no reabrir una ADR sin preguntar) · diseño → `docs/DESIGN.md`.
-- **Ponytail:** su plugin inyecta las reglas en cada sesión (hook `SessionStart`), así que `AGENTS.md` **no** se importa aquí con `@`: sería pagarlo dos veces. Está en la raíz para otros agentes. Modo por defecto: `full`.
+- **Ponytail:** su plugin inyecta las reglas en cada sesión (hook `SessionStart`); no se copian en el repo. Modo por defecto: `full`.
 
 ## Comandos (necesitan Node ≥ 24 en el PATH)
 
@@ -17,7 +17,6 @@ Analizador de partidas de chess.com con Stockfish 19 en el navegador (WASM), sin
 | Tests unitarios/componente | `npm test` (`-- --coverage` para cobertura) |
 | Build | `npm run build` |
 | e2e | `npm run e2e` |
-| Mutation testing (antes de v1.0) | `npm run mutate` |
 | Regenerar el libro de aperturas | `npm run build:openings` |
 
 ## Regla de oro
@@ -55,7 +54,7 @@ Analizador de partidas de chess.com con Stockfish 19 en el navegador (WASM), sin
 | Crear o cambiar UI | Skill **frontend-design** | Instrucción (obligatorio) |
 | Bug, test que falla 2 veces, regresión | Skill **diagnosing-bugs** | Instrucción |
 | Antes de cada PR | Skill **ponytail-review** | Instrucción (obligatorio, debe pasar) |
-| Antes de v1.0 (una sola vez) | **ponytail-audit**, **ponytail-debt**, `npm run mutate`, e2e Firefox/WebKit | Instrucción (R3 del roadmap) |
+| Antes de v1.0 (una sola vez) | **ponytail-audit**, **ponytail-debt**, e2e Firefox/WebKit | Instrucción (R3 del roadmap) |
 | Contexto alto / cambio de tarea | `/compact …` / `/clear` | **Recordar a la usuaria** (ver Contexto) |
 | Merge del PR, acciones en Cloudflare/GitHub | Manual | **Recordar a la usuaria** |
 

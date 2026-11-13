@@ -29,7 +29,7 @@ export type WasmDeps = {
   storage?: Pick<StorageManager, 'estimate'>;
 };
 
-const hex = (digest: ArrayBuffer) =>
+export const hex = (digest: ArrayBuffer) =>
   Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 /** The verified wasm, or `undefined` if it was never downloaded or the browser evicted it. Never touches the network. */

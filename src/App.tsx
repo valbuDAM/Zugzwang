@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, Switch } from 'wouter';
 import { About } from './ui/About.tsx';
@@ -12,19 +13,24 @@ function ThemeToggle() {
   const { t } = useTranslation();
   const [theme, setTheme] = useState(readTheme);
   const light = theme === 'light';
+  // The label names the theme it switches to, so no aria-pressed: "Modo oscuro, pressed" would read backwards.
   return (
     <button
       type="button"
       className="theme-toggle"
-      aria-pressed={light}
       onClick={() => {
         const next = light ? 'dark' : 'light';
-        applyTheme(next);
         storeTheme(next);
-        setTheme(next);
+        // flushSync: the cross-fade snapshots the new page as soon as this returns, label included.
+        const swap = () => {
+          applyTheme(next);
+          flushSync(() => setTheme(next));
+        };
+        if (document.startViewTransition) document.startViewTransition(swap);
+        else swap();
       }}
     >
-      {t('app.lightMode')}
+      {t(light ? 'app.darkMode' : 'app.lightMode')}
     </button>
   );
 }

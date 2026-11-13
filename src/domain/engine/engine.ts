@@ -10,7 +10,7 @@ export type Eval = {
 };
 
 /** `searchmoves`: the UCI moves the search is restricted to. */
-export type AnalyseOptions = { depth?: number; movetime?: number; searchmoves?: string[] };
+export type AnalyseOptions = { depth?: number; searchmoves?: string[] };
 
 export interface Engine {
   /** How many analyses it runs at once (ADR-032); 1 when left out. */

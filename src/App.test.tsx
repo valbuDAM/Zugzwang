@@ -19,7 +19,6 @@ const game = (id: number, endTime: number, over: Partial<Game> = {}): Game => ({
   url: `https://www.chess.com/game/live/${id}`,
   pgn: '1. e4 e5 2. Nf3 *',
   timeClass: 'blitz',
-  rated: true,
   endTime,
   white: side('Hikaru', 3200, 'win'),
   black: side(`Rival${id}`, 3190, 'resigned'),

@@ -7,7 +7,6 @@ const game = (url: string, endTime: number, over: Partial<Game> = {}): Game => (
   url,
   pgn: '',
   timeClass: 'blitz',
-  rated: true,
   endTime,
   white: side('Hikaru', 3200, 'win'),
   black: side('MagnusCarlsen', 3190, 'resigned'),

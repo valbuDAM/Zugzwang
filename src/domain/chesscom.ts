@@ -9,8 +9,6 @@ export type Game = {
   url: string;
   pgn: string;
   timeClass: string;
-  /** Missing on months recovered from their PGN, which does not say. */
-  rated?: boolean;
   /** `rules` of the API or the PGN's `Variant`; undefined when the PGN does not say (see `isStandard`). */
   variant?: string | undefined;
   endTime: number;
@@ -113,19 +111,13 @@ function parseSide(v: unknown): Side {
 function parseGame(v: unknown): Game | null {
   if (!isRecord(v)) throw new ChessComError('Unexpected game shape');
   if (typeof v.pgn !== 'string') return null; // e.g. daily games without a PGN
-  if (
-    typeof v.url !== 'string' ||
-    typeof v.time_class !== 'string' ||
-    typeof v.rated !== 'boolean' ||
-    typeof v.end_time !== 'number'
-  ) {
+  if (typeof v.url !== 'string' || typeof v.time_class !== 'string' || typeof v.end_time !== 'number') {
     throw new ChessComError('Unexpected game shape');
   }
   return {
     url: v.url,
     pgn: v.pgn,
     timeClass: v.time_class,
-    rated: v.rated,
     variant: typeof v.rules === 'string' ? v.rules : undefined,
     endTime: v.end_time,
     white: parseSide(v.white),

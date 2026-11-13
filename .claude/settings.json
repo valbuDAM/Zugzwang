@@ -23,8 +23,6 @@
       "Read(./node_modules/**)",
       "Read(./dist/**)",
       "Read(./coverage/**)",
-      "Read(./reports/**)",
-      "Read(./.stryker-tmp/**)",
       "Read(./playwright-report/**)",
       "Read(./test-results/**)",
       "Read(./public/engine/**)",

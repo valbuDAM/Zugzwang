@@ -1,6 +1,15 @@
 import type { WhiteScore } from '../domain/analysis.ts';
 
 const LOCALE = 'es';
+// Built once: a finished analysis re-renders every move's evaluation.
+const EVAL = new Intl.NumberFormat(LOCALE, {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+  signDisplay: 'exceptZero',
+});
+const DATE = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' });
+/** UTC because archive months are UTC. */
+const MONTH = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 export const formatNumber = (n: number, digits = 0) =>
   new Intl.NumberFormat(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
@@ -13,12 +22,10 @@ export const formatPercent = (ratio: number, digits = 1) =>
     maximumFractionDigits: digits,
   }).format(ratio);
 
-export const formatDate = (date: Date | number) =>
-  new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' }).format(date);
+export const formatDate = (date: Date | number) => DATE.format(date);
 
-/** «marzo de 2024»; UTC because archive months are UTC. */
-export const formatMonth = (date: Date | number) =>
-  new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+/** «marzo de 2024». */
+export const formatMonth = (date: Date | number) => MONTH.format(date);
 
 /** Seconds on the clock → «2:59» or «1:00:01»; tenths are dropped. */
 export function formatClock(seconds: number): string {
@@ -30,13 +37,7 @@ export function formatClock(seconds: number): string {
 
 /** «+0,3», «−1,3», «#3», «-#2», «1-0»; always from white's point of view. */
 export function formatEval(score: WhiteScore): string {
-  if (score.kind === 'cp') {
-    return new Intl.NumberFormat(LOCALE, {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-      signDisplay: 'exceptZero',
-    }).format(score.cp / 100);
-  }
+  if (score.kind === 'cp') return EVAL.format(score.cp / 100);
   if (score.kind === 'mate') return `${score.mate < 0 ? '-' : ''}#${Math.abs(score.mate)}`;
   return score.winner === 'white' ? '1-0' : score.winner === 'black' ? '0-1' : '½-½';
 }

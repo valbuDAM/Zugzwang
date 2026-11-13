@@ -22,6 +22,13 @@ it('lists the moves in numbered pairs with their clocks and marks the current on
   expect(screen.getByRole('button', { name: /e4/ })).not.toHaveAttribute('aria-current');
 });
 
+it("numbers a game that starts mid-way from its FEN, leaving White's cell empty when Black starts", () => {
+  const fromFen = parseGamePgn('[SetUp "1"]\n[FEN "8/8/4k3/8/3K4/8/8/8 b - - 0 20"]\n\n20... Kd6 21. Kc4 Kc6 *');
+  render(<MoveList positions={fromFen} ply={0} onSelect={() => {}} />);
+  const rows = within(screen.getByRole('list', { name: 'Jugadas' })).getAllByRole('listitem');
+  expect(rows.map((r) => r.textContent)).toEqual(['20.…Kd6', '21.Kc4Kc6']);
+});
+
 it('selects the clicked move by its ply', async () => {
   const onSelect = vi.fn();
   render(<MoveList positions={positions} ply={0} onSelect={onSelect} />);

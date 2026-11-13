@@ -35,6 +35,7 @@
   color: inherit;
   font: inherit;
   text-align: start;
+  white-space: nowrap; /* "O-O-O" would break at its hyphens on a phone */
 }
 
 /* The label sits in the top-right corner of its move, smaller than elsewhere. The ring keeps it apart from

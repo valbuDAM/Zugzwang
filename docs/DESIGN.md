@@ -1,6 +1,6 @@
 # Diseño — «club clásico reinventado»
 
-La sala de un club de ajedrez antiguo: mesas de nogal, herrajes de latón y tapete verde. Fuente de verdad de los valores: `src/styles/tokens.css`. Muestra viva: `/styleguide` (sin enlazar, `noindex`). Decisiones: ADR-004 y ADR-024.
+La sala de un club de ajedrez antiguo: mesas de nogal, herrajes de latón y tapete verde. Fuente de verdad de los valores: `src/styles/tokens.css`. Decisiones: ADR-004 y ADR-024.
 
 ## Reglas
 
@@ -25,7 +25,7 @@ La sala de un club de ajedrez antiguo: mesas de nogal, herrajes de latón y tape
 | `--color-on-felt` / `-muted` | `#efe4cf` / `#d0bb9a` | = | Texto sobre el tapete |
 | `--color-board-light` / `-dark` | `#d9c7a0` / `#3f6a54` | = | Casillas (boj / fieltro) |
 
-Contraste medido (WCAG): texto principal ≥ 12,5:1; secundario ≥ 5,5:1; latón ≥ 4,8:1 sobre todos sus fondos; texto sobre fieltro ≥ 5,3:1; coordenadas ≥ 4,9:1. Axe lo comprueba en CI en los dos temas (`tests/e2e/styleguide.spec.ts`).
+Contraste medido (WCAG): texto principal ≥ 12,5:1; secundario ≥ 5,5:1; latón ≥ 4,8:1 sobre todos sus fondos; texto sobre fieltro ≥ 5,3:1; coordenadas ≥ 4,9:1. Axe lo comprueba en CI en los dos temas, sobre las páginas reales (`tests/e2e/home.spec.ts` y `report.spec.ts`).
 
 ## Etiquetas de jugada
 
@@ -73,7 +73,7 @@ Icono de la app: `public/favicon.svg` (peón de marfil sobre fieltro con la insi
 
 ## Movimiento
 
-- `--duration-fast` 120 ms (hover) · `--duration-base` 220 ms (aparición de insignias) · `--duration-slow` 420 ms (barra de evaluación).
+- `--duration-fast` 120 ms (hover) · `--duration-base` 220 ms (aparición de insignias) · `--duration-slow` 420 ms (barra de evaluación y fundido al cambiar de tema).
 - `--ease-out` para desplazamientos; `--ease-spring` (con rebote) solo para la insignia que «se posa».
 - Con `prefers-reduced-motion: reduce`, las tres duraciones pasan a 0 ms.
 - El movimiento responde a acciones de la usuaria; nada se anima solo salvo la insignia al cargar.

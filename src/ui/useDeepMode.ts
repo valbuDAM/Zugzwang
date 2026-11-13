@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { WasmDownloadError, type WasmErrorKind } from '../domain/engine/fullWasm.ts';
 import type { DeepDeps } from '../engine/deep.ts';
 
-export type DeepError = Exclude<WasmErrorKind, 'aborted'> | 'unknown';
+type DeepError = Exclude<WasmErrorKind, 'aborted'> | 'unknown';
 
-export type DeepState =
+type DeepState =
   | { status: 'unavailable' }
   // Looking in the cache; the viewer works with lite meanwhile.
   | { status: 'checking' }

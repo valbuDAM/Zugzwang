@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WhiteScore } from '../domain/analysis.ts';
 import type { MoveLabel } from '../domain/classify.ts';
-import type { Position } from '../domain/pgn.ts';
+import { moveNumber, type Position } from '../domain/pgn.ts';
 import { formatClock, formatEval } from '../i18n/format.ts';
 import { MoveBadge } from './MoveBadge.tsx';
 import './MoveList.css';
@@ -76,16 +76,22 @@ export function MoveList({
     );
   };
 
-  const pairs = Array.from({ length: Math.ceil((positions.length - 1) / 2) }, (_, i) => i + 1);
+  // A game from a FEN may start with Black: its first row leaves White's cell empty, as in «20… Kd6».
+  const first = moveNumber(positions[0]?.fen ?? '', 1);
+  const skip = first.black ? 1 : 0;
+  const rows = Array.from({ length: Math.ceil((positions.length - 1 + skip) / 2) }, (_, i) => i);
   return (
     <ol className="move-list" aria-label={t('game.moves')}>
-      {pairs.map((n) => (
-        <li key={n}>
-          <span className="move-list-number">{n}.</span>
-          {move(2 * n - 1)}
-          {move(2 * n)}
-        </li>
-      ))}
+      {rows.map((i) => {
+        const white = 2 * i + 1 - skip;
+        return (
+          <li key={i}>
+            <span className="move-list-number">{first.number + i}.</span>
+            {white > 0 ? move(white) : <span aria-hidden="true">…</span>}
+            {move(white + 1)}
+          </li>
+        );
+      })}
     </ol>
   );
 }

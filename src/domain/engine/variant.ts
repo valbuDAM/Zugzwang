@@ -1,6 +1,6 @@
 export type Variant = 'full-multi' | 'lite-multi' | 'lite-single' | 'asm';
 
-export type Capabilities = { wasm: boolean; threads: boolean };
+type Capabilities = { wasm: boolean; threads: boolean };
 
 /** Files in `public/engine/` (vendored by scripts/vendor-engine.mjs). */
 export const VARIANT_FILES: Record<Variant, string> = {
