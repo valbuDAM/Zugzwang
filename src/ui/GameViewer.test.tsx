@@ -229,6 +229,15 @@ it('walks the game with the keyboard and announces each move', async () => {
   expect(status).toHaveTextContent('Posición inicial');
 });
 
+it('announces the number and side from the FEN when the game starts mid-way with Black', async () => {
+  render(<GameViewer pgn={'[SetUp "1"]\n[FEN "8/8/4k3/8/3K4/8/8/8 b - - 0 20"]\n\n20... Kd6 21. Kc4 *'} />);
+  const status = screen.getByRole('status');
+  await userEvent.keyboard('{ArrowRight}');
+  expect(status).toHaveTextContent('20. Rd6, negras');
+  await userEvent.keyboard('{ArrowRight}');
+  expect(status).toHaveTextContent('21. Rc4, blancas');
+});
+
 it('flips the board with F and the button, and ignores keys with modifiers', async () => {
   render(<GameViewer pgn={PGN} />);
   const flip = screen.getByRole('button', { name: 'Girar tablero' });

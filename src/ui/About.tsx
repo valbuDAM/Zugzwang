@@ -3,7 +3,7 @@ import { Link } from 'wouter';
 import { STOCKFISH_VERSION } from '../domain/engine/fullWasm.ts';
 import './Home.css';
 
-const SOURCE = 'https://github.com/valbuDAM/chessAnalyzer';
+const SOURCE = 'https://github.com/valbuDAM/Zugzwang';
 
 // What the app ships or is built on, with the licence each one asks to be named.
 const CREDITS = [

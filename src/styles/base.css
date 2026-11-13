@@ -69,10 +69,10 @@ main p > a,
   background: transparent;
 }
 
-.theme-toggle[aria-pressed="true"] {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-bg);
+/* Theme switch: the browser cross-fades the old page into the new one (ThemeToggle in App.tsx). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-slow);
 }
 
 /* Entrance of a screen or a panel; the durations are 0 with reduced motion (tokens.css). */

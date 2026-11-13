@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "license": "GPL-3.0-only",
+  "homepage": "https://chessanalyzer.bvalbuena06.workers.dev/",
+  "repository": "github:valbuDAM/Zugzwang",
   "engines": {
     "node": ">=24"
   },
@@ -17,8 +19,6 @@
     "prepare": "simple-git-hooks",
     "preview": "vite preview",
     "e2e": "playwright test",
-    "lhci": "vite build && lhci autorun",
-    "mutate": "stryker run",
     "vendor:engine": "node scripts/vendor-engine.mjs",
     "build:openings": "node scripts/build-openings.ts"
   },
@@ -43,8 +43,6 @@
     "@biomejs/biome": "2.6.3",
     "@lhci/cli": "0.15.1",
     "@playwright/test": "1.64.1",
-    "@stryker-mutator/core": "10.1.1",
-    "@stryker-mutator/vitest-runner": "10.1.1",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",

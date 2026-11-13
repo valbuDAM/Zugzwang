@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { isStandard, PgnError, parseGamePgn, readPgn } from './pgn';
+import { isStandard, moveNumber, PgnError, parseGamePgn, readPgn } from './pgn';
 
 describe('isStandard', () => {
   it('is true when the variant is missing or a standard name, whatever the case', () => {
-    for (const v of [undefined, 'chess', 'Chess', 'Standard']) expect(isStandard(v)).toBe(true);
+    for (const v of [undefined, 'chess', 'Chess', 'Standard', 'From Position']) expect(isStandard(v)).toBe(true);
   });
 
   it('is false for anything else', () => {
@@ -15,6 +15,24 @@ describe('isStandard', () => {
 });
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+describe('moveNumber', () => {
+  it('counts from move 1 with White when the game starts from the start', () => {
+    expect([1, 2, 3].map((ply) => moveNumber(START, ply))).toEqual([
+      { number: 1, black: false },
+      { number: 1, black: true },
+      { number: 2, black: false },
+    ]);
+  });
+
+  it('counts from the FEN when the game starts mid-way with Black to move', () => {
+    const fen = '8/8/4k3/8/3K4/8/8/8 b - - 0 20';
+    expect([1, 2].map((ply) => moveNumber(fen, ply))).toEqual([
+      { number: 20, black: true },
+      { number: 21, black: false },
+    ]);
+  });
+});
 
 const PGN = `[Event "Live Chess"]
 [White "hikaru"]
@@ -76,6 +94,12 @@ describe('parseGamePgn', () => {
     for (const name of ['Standard', 'chess', 'CHESS']) {
       expect(parseGamePgn(`[Variant "${name}"]\n\n1. e4 *`)).toHaveLength(2);
     }
+  });
+
+  it("accepts lichess's From Position, a standard game from its FEN", () => {
+    const fen = '8/8/4k3/8/3K4/8/8/8 b - - 0 20';
+    const pgn = `[Variant "From Position"]\n[SetUp "1"]\n[FEN "${fen}"]\n\n20... Kd6 21. Kc4 *`;
+    expect(parseGamePgn(pgn)[2]).toMatchObject({ san: 'Kc4', uci: 'd4c4' });
   });
 
   it('starts from the FEN header when the game has one', () => {

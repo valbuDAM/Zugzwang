@@ -12,6 +12,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   delete document.documentElement.dataset.theme;
+  delete (document as { startViewTransition?: unknown }).startViewTransition;
 });
 
 it('follows the system until there is a stored choice', () => {
@@ -37,18 +38,29 @@ it('is dark where the system cannot be asked, and survives a blocked storage', (
   expect(() => storeTheme('light')).not.toThrow();
 });
 
-it('switches the theme from the button and remembers it', async () => {
+it('switches the theme from the button, names the next one and remembers it', async () => {
   system(false);
   render(<App />);
   const toggle = screen.getByRole('button', { name: 'Modo claro' });
-  expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
   await userEvent.click(toggle);
-  expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  expect(toggle).toHaveAccessibleName('Modo oscuro');
   expect(document.documentElement.dataset.theme).toBe('light');
   expect(readTheme()).toBe('light');
 
   await userEvent.click(toggle);
+  expect(toggle).toHaveAccessibleName('Modo claro');
   expect(document.documentElement.dataset.theme).toBe('dark');
   expect(readTheme()).toBe('dark');
+});
+
+it('cross-fades where the browser can', async () => {
+  system(false);
+  const startViewTransition = vi.fn((swap: () => void) => swap());
+  Object.assign(document, { startViewTransition });
+  render(<App />);
+  await userEvent.click(screen.getByRole('button', { name: 'Modo claro' }));
+  expect(startViewTransition).toHaveBeenCalledOnce();
+  expect(document.documentElement.dataset.theme).toBe('light');
+  expect(screen.getByRole('button', { name: 'Modo oscuro' })).toBeInTheDocument();
 });

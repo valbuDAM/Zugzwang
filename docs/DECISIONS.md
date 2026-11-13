@@ -74,7 +74,7 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
   - WCAG 2.2 AA: axe sin violaciones *serious* ni *critical*, teclado completo y lector de pantalla.
   - Lighthouse: rendimiento ≥ 90, accesibilidad = 100, LCP < 2,5 s.
   - Presupuesto: JS inicial ≤ 200 KB gz, fuentes ≤ 120 KB.
-  - Stryker en `src/domain/` con ≥ 80 %, al cerrar cada hito.
+  - Stryker en `src/domain/` con ≥ 80 %, al cerrar cada hito. **Actualización (ADR-034):** Stryker se quitó tras v1.0.
 - **Descartado:** Stryker en cada PR (multiplica el tiempo de CI) y un umbral de cobertura global (en UI es ruido).
 
 ### ADR-008 · Variante del motor y fallback
@@ -104,6 +104,7 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
 - **Decisión:** Cloudflare Pages, con `_headers` para COOP `same-origin` + COEP `require-corp`, una previsualización por PR y fallback SPA.
 - **Descartado:** Vercel Hobby (no permite uso comercial; límite de 100 MB), Netlify (ahora funciona por créditos), GitHub Pages (no permite cabeceras sin trucos).
 - **Consecuencias:** las imágenes y la API de chess.com envían `CORP: cross-origin` y `ACAO: *` (comprobado), así que COEP no las rompe.
+- **Actualización (ADR-034):** se despliega en Cloudflare Workers con assets estáticos (`wrangler.jsonc`), que también leen `_headers`.
 
 ### ADR-011 · % de victoria y precisión (fórmula de lichess)
 - **Decisión:** exactamente la fórmula de lichess:
@@ -171,6 +172,7 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
 
 ### ADR-019 · Nombre: Zugzwang
 - **Decisión:** el producto se llama **Zugzwang**; el repositorio, `valbuDAM/chessAnalyzer` (igual que la carpeta local, por decisión de la usuaria).
+- **Actualización (ADR-034):** el repositorio se renombró a `valbuDAM/Zugzwang` (GitHub redirige el nombre antiguo); la carpeta local y el Worker `chessanalyzer` siguen igual.
 
 ### ADR-020 · Caché de chess.com sin cabeceras condicionales
 - **Contexto:** enviar `If-None-Match` a mano deja de ser una petición CORS simple y provoca un preflight `OPTIONS` que no sabemos si chess.com responde.
@@ -194,11 +196,12 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
 - **Contexto:** el plugin ponytail inyecta sus reglas con su hook `SessionStart` (también tras `/clear` y `/compact`) y en los subagentes (`SubagentStart`).
 - **Decisión:** `AGENTS.md` va en la raíz para otros agentes, pero **no** se importa con `@` en `CLAUDE.md`.
 - **Consecuencias:** no se pagan dos veces los mismos tokens. Si se desinstala el plugin, hay que añadir `@AGENTS.md` a `CLAUDE.md`.
+- **Actualización (ADR-034):** `AGENTS.md` se borró; sin el plugin, las reglas de ponytail dejan de aplicarse.
 
 ### ADR-024 · Hoja de estilo (T0.5)
 - **Fecha:** 2026-10-27.
 - **Decisión:**
-  - `styleguide.html` como segunda entrada de Vite, incluida en el build, sin enlazar y con `noindex`. Así pasa axe en CI y se revisa en la preview de Cloudflare.
+  - `styleguide.html` como segunda entrada de Vite, incluida en el build, sin enlazar y con `noindex`. Así pasa axe en CI y se revisa en la preview de Cloudflare. **Actualización (ADR-034):** se borró antes de v1.0; axe revisa los dos temas en las páginas reales.
   - Tipografía: una serif para títulos y cifras y una sans de interfaz, OFL, vía `@fontsource` (subconjunto latino), ≤ 2 pesos de la serif. Nada de Inter, Playfair ni Fraunces.
   - Piezas merida (Armando Hernández Marroquín, GPLv2+), SVG en el repo y atribuidas.
   - Tablero en colores planos de los tokens, sin texturas.
@@ -241,6 +244,7 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
   - `Game.variant` guarda `rules` o la cabecera `Variant`. Clave de caché `games:v2:`.
   - `parseGamePgn` lanza `PgnError({ kind: 'variant', name })` y ya no trata el enroque 960. La tarjeta lleva la etiqueta y enlaza igualmente; la página de la partida solo explica, sin tablero ni botón de analizar. El PGN pegado se rechaza en el formulario.
 - **Descartado:** mostrar el tablero sin análisis (exige enroque 960), soporte real de Chess960 (el motor sigue con el `shortcut:` de reglas estándar), lista negra de variantes.
+- **Actualización (ADR-034):** también es estándar `From Position`, el nombre que da lichess a una partida normal desde un FEN.
 
 ### ADR-028 · Cola de análisis (T4.2)
 - **Fecha:** 2026-10-29.
@@ -312,3 +316,14 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
   - La razón ocupa el sitio del %; sin razón, queda el %. Solo en jugadas con «Lo mejor era». Textos de tú, elegidos por la usuaria.
 - **Descartado:** nombrar cambios compuestos («la calidad», «una pieza por dos peones»); razones posicionales; un evaluador de cambios (SEE).
 - **Consecuencias:** una línea del motor cortada justo tras una jugada intermedia tranquila puede contar medio cambio (`shortcut:` en `reason.ts`); una jugada «Buena» puede llevar «pierdes material» en posiciones ya perdidas. Sin calibrar con partidas reales.
+
+### ADR-034 · Limpieza para v1.0
+- **Fecha:** 2026-11-13.
+- **Contexto:** antes de publicar, la usuaria pide dejar en el repo solo lo imprescindible, y que el botón de tema cambie de texto y no salte de golpe.
+- **Decisión:**
+  - Fuera: la hoja de estilo (`styleguide.html`, `src/styleguide/` y su e2e), Stryker (configuración, 2 dependencias y `npm run mutate`), `AGENTS.md` y el script `lhci` (la CI llama a `npx lhci autorun`). Se quedan `engine-check.html` (el único e2e del motor real), Lighthouse CI, `.claude/` y `CLAUDE.md`.
+  - Hosting: Cloudflare Workers con assets estáticos (`wrangler.jsonc` y `public/_headers`) en https://chessanalyzer.bvalbuena06.workers.dev/.
+  - El botón de tema nombra el tema al que cambia («Modo claro» / «Modo oscuro»), sin `aria-pressed`. El cambio es un fundido de toda la página con View Transitions (`--duration-slow`, que es 0 con movimiento reducido); sin soporte, instantáneo.
+  - Hallazgos de `ponytail-audit` que entran: la lista y el lector de pantalla numeran desde el FEN (`moveNumber`), así que una partida que empieza con negras deja vacía la casilla blanca de la primera fila; `From Position` es estándar (ADR-027); una sola copia del enroque para el motor (`engineUci`), de «FEN → posición» (`positionFromFen`) y de `hex`; formateadores de `Intl` creados una vez; fuera `movetime`, `Game.rated` y 7 `export` sin uso.
+- **Descartado:** un círculo que se abre desde el botón (más código), transición de color en cada elemento (choca con las animaciones), `CONTRIBUTING`/`SECURITY`/`CHANGELOG` (proyecto de una persona; las notas de versión van en la release de GitHub), una captura en el README (habría que mantenerla), dividir `GameViewer` antes de publicar (al backlog), pasar `vendor-engine.mjs` a `.ts` y no compilar dos veces en la CI (poco beneficio).
+- **Consecuencias:** sin mutation testing; si vuelve a hacer falta, Stryker no soporta TypeScript 7.

@@ -1,4 +1,4 @@
-export type SoundKind = 'move' | 'capture' | 'check' | 'end';
+type SoundKind = 'move' | 'capture' | 'check' | 'end';
 
 // Synthesised with Web Audio: no audio files, so nothing to license or attribute under the GPL.
 const NOTES: Record<SoundKind, { freq: number; at: number; dur: number; type: OscillatorType }[]> = {

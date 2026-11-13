@@ -100,7 +100,13 @@
   background-image: url("/pieces/merida/bK.svg");
 }
 
-/* Files in lowercase, as in algebraic notation (chessground uppercases them). */
+/* Files in lowercase, as in algebraic notation (chessground uppercases them), in the bottom-right corner of
+   their own square: chessground's fixed 24px offset puts the "a" under the b-file on a phone. */
 .board coords.files {
+  left: 0;
+  text-align: end;
   text-transform: none;
+}
+.board coords.files coord {
+  padding-inline-end: var(--space-1);
 }

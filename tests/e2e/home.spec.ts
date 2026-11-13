@@ -196,5 +196,6 @@ test('the about page credits the engine and has no serious a11y violations', asy
   await expect(page.getByRole('link', { name: /Stockfish 19/ })).toBeVisible();
   await expectNoSeriousA11yViolations();
   await page.getByRole('button', { name: 'Modo claro' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light'); // the swap waits for the cross-fade's snapshot
   await expectNoSeriousA11yViolations();
 });

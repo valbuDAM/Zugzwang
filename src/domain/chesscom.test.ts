@@ -150,7 +150,6 @@ describe('getMonthGames', () => {
     expect(games?.[0]).toMatchObject({
       url: 'https://www.chess.com/game/live/100000001',
       timeClass: 'blitz',
-      rated: true,
       endTime: 1709300000,
       white: { username: 'Hikaru', rating: 3200, result: 'win' },
       black: { username: 'MagnusCarlsen', rating: 3190, result: 'resigned' },

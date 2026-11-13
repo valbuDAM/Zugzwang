@@ -43,12 +43,15 @@ function workerTransport(url: string, release?: () => void): Transport {
   };
 }
 
-/** ADR-009 for this device. "Mobile" is a touch-first pointer, the same test the CSS uses for touch targets. */
+/** A touch-first pointer: the same test the CSS uses for touch targets. */
+export const isCoarse = () => window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+
+/** ADR-009 for this device; "mobile" is a coarse pointer. */
 export const detectSettings = (variant: Variant = detectVariant()): AnalysisSettings =>
   analysisSettings({
     variant,
     cores: navigator.hardwareConcurrency || 1,
-    mobile: window.matchMedia?.('(pointer: coarse)')?.matches ?? false,
+    mobile: isCoarse(),
   });
 
 /** ADR-032: one Worker per engine; with more than one they go behind an `EnginePool`. */

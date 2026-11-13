@@ -1,8 +1,8 @@
-import { Chess } from 'chessops/chess';
-import { parseFen } from 'chessops/fen';
+import type { Chess } from 'chessops/chess';
 import { opposite, parseUci } from 'chessops/util';
 import type { PositionEval, WhiteScore } from './analysis.ts';
 import { balance, type Piece, ROLES } from './classify.ts';
+import { positionFromFen } from './pgn.ts';
 
 /** Why the engine's move was better than the one played (ADR-033). `piece` is null when it is not one clean piece. */
 export type Reason =
@@ -48,10 +48,8 @@ function onlyLoss(start: Chess, end: Chess, color: 'white' | 'black'): Piece | n
  * and after the move; undefined when neither a mate nor material explains it.
  */
 export function moveReason(fen: string, uci: string, before: PositionEval, after: PositionEval): Reason | undefined {
-  const setup = parseFen(fen);
-  const parsed = setup.isOk ? Chess.fromSetup(setup.value) : undefined;
-  if (!parsed?.isOk) return undefined;
-  const start = parsed.value;
+  const start = positionFromFen(fen);
+  if (!start) return undefined;
   const mover = start.turn;
 
   /** Moves to the mate: positive when the mover gives it, negative when the mover gets it, 0 without one. */

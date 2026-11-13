@@ -8,7 +8,7 @@ import { type Engine, EngineLoadError } from '../domain/engine/engine.ts';
 import type { Variant } from '../domain/engine/variant.ts';
 import { playLine } from '../domain/line.ts';
 import { type Book, loadBook, openingName } from '../domain/openings.ts';
-import { parseGamePgn } from '../domain/pgn.ts';
+import { moveNumber, parseGamePgn } from '../domain/pgn.ts';
 import { moveReason } from '../domain/reason.ts';
 import { createEngine, createFullEngine, detectSettings, detectVariant } from '../engine/createEngine.ts';
 import { type DeepDeps, detectDeep } from '../engine/deep.ts';
@@ -195,11 +195,12 @@ function Viewer({
   const side = flipped ? (orientation === 'white' ? 'black' : 'white') : orientation;
   // Piece letters spoken in Spanish (Cf3, not Nf3); the only uppercase letters in SAN besides O-O are pieces.
   const spokenSan = current?.san?.replace(/[KQRBN]/g, (c) => t('game.pieceLetters').charAt('KQRBN'.indexOf(c)));
+  const turn = moveNumber(positions[0]?.fen ?? '', ply);
   const spokenMove = spokenSan
     ? t('game.announce', {
-        number: Math.ceil(ply / 2),
+        number: turn.number,
         san: spokenSan,
-        side: t(ply % 2 ? 'game.sideWhite' : 'game.sideBlack'),
+        side: t(turn.black ? 'game.sideBlack' : 'game.sideWhite'),
       })
     : t('game.start');
   const announcement = label

@@ -9,7 +9,6 @@ const game: Game = {
   url: 'https://www.chess.com/game/live/100000001',
   pgn: '[Event "Live Chess"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0',
   timeClass: 'rapid',
-  rated: true,
   endTime: 1709300000,
   white: { username: 'Hikaru', rating: 3200, result: 'resigned' },
   black: { username: 'MagnusCarlsen', rating: 3190, result: 'win' },

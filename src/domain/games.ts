@@ -1,7 +1,7 @@
 import type { Game, Side } from './chesscom.ts';
 
 export type Result = 'win' | 'loss' | 'draw';
-export type PlayerView = { color: 'white' | 'black'; opponent: Side; result: Result };
+type PlayerView = { color: 'white' | 'black'; opponent: Side; result: Result };
 /** `games` is null when chess.com could not serve the month. */
 export type Month = { url: string; games: Game[] | null };
 

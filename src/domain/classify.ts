@@ -1,10 +1,9 @@
-import { Chess } from 'chessops/chess';
-import { parseFen } from 'chessops/fen';
+import type { Chess } from 'chessops/chess';
 import { opposite, parseUci } from 'chessops/util';
 import { winDrops } from './accuracy.ts';
 import { type PositionEval, winPercent } from './analysis.ts';
 import { type Book, inBook } from './openings.ts';
-import type { Position } from './pgn.ts';
+import { type Position, positionFromFen } from './pgn.ts';
 
 export const MOVE_LABELS = [
   'brilliant',
@@ -20,7 +19,7 @@ export const MOVE_LABELS = [
 export type MoveLabel = (typeof MOVE_LABELS)[number];
 
 /** ADR-012, in win% lost by the mover unless said otherwise. */
-export const THRESHOLDS = {
+const THRESHOLDS = {
   best: 1,
   good: 5,
   inaccuracy: 10,
@@ -83,10 +82,8 @@ export function classifyGame(positions: Position[], evals: PositionEval[], book:
     const after = evals[i];
     const from = positions[i - 1];
     const to = positions[i];
-    const setup = from && parseFen(from.fen);
-    const parsed = setup?.isOk ? Chess.fromSetup(setup.value) : undefined;
-    if (!before || !after || !from || !to?.uci || !parsed?.isOk) return null;
-    const pos = parsed.value;
+    const pos = from && positionFromFen(from.fen);
+    if (!before || !after || !from || !to?.uci || !pos) return null;
     if (inBook(book, to.fen)) return 'book';
     if (legalMoves(pos) <= 1) return null;
 

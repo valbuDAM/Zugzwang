@@ -41,10 +41,8 @@ function invalidReason(fen: string): string | undefined {
   return undefined;
 }
 
-const goCommand = ({ depth, movetime, searchmoves }: AnalyseOptions) => {
-  const parts = ['go'];
-  if (depth !== undefined || movetime === undefined) parts.push('depth', String(depth ?? DEFAULT_DEPTH));
-  if (movetime !== undefined) parts.push('movetime', String(movetime));
+const goCommand = ({ depth = DEFAULT_DEPTH, searchmoves }: AnalyseOptions) => {
+  const parts = ['go', 'depth', String(depth)];
   if (searchmoves?.length) parts.push('searchmoves', ...searchmoves);
   return parts.join(' ');
 };
@@ -77,8 +75,8 @@ export class UciEngine implements Engine {
   analyse(fen: string, opts: AnalyseOptions = {}): Promise<Eval> {
     if (this.#failure) return Promise.reject(this.#failure);
     // Stockfish reads an unusable limit as "no limit", and the search would never end.
-    if ([opts.depth, opts.movetime].some((n) => n !== undefined && !(Number.isInteger(n) && n > 0))) {
-      return Promise.reject(new EngineError('depth and movetime must be positive integers'));
+    if (opts.depth !== undefined && !(Number.isInteger(opts.depth) && opts.depth > 0)) {
+      return Promise.reject(new EngineError('depth must be a positive integer'));
     }
     const invalid = invalidReason(fen);
     if (invalid) return Promise.reject(new EngineError(invalid));

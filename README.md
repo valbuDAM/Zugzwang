@@ -1,6 +1,11 @@
 # Zugzwang
 
+[![CI](https://github.com/valbuDAM/Zugzwang/actions/workflows/ci.yml/badge.svg)](https://github.com/valbuDAM/Zugzwang/actions/workflows/ci.yml)
+[![Licencia: GPL-3.0](https://img.shields.io/badge/licencia-GPL--3.0-blue)](LICENSE)
+
 Analizador de partidas de [chess.com](https://www.chess.com) que se ejecuta entero en el navegador: Stockfish 19 en WebAssembly, sin servidor de análisis. Tus partidas no salen de tu equipo.
+
+**Pruébalo:** <https://chessanalyzer.bvalbuena06.workers.dev/>
 
 ## Qué hace
 
@@ -30,7 +35,11 @@ npm run dev
 | Volver a descargar el motor | `npm run vendor:engine` |
 | Regenerar el libro de aperturas | `npm run build:openings` |
 
-El motor multihilo necesita que la página esté aislada (`Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: require-corp`). El servidor de desarrollo, `vite preview` y `public/_headers` ya envían esas cabeceras; sin ellas se usa el motor de un hilo.
+El modo profundo (el motor completo, multihilo) necesita que la página esté aislada (`Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: require-corp`). El servidor de desarrollo, `vite preview` y `public/_headers` ya envían esas cabeceras; sin ellas, el motor va con un hilo.
+
+## Despliegue
+
+Cloudflare Workers Builds publica cada push a `main` en <https://chessanalyzer.bvalbuena06.workers.dev/>. El Worker solo sirve `dist/` como assets estáticos (`wrangler.jsonc`, con fallback SPA), y `public/_headers` añade las cabeceras de aislamiento. Para desplegar a mano: `npm run build` y `npx wrangler deploy`.
 
 ## Documentación
 

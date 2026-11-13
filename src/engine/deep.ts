@@ -1,6 +1,6 @@
 import { cachedWasm, downloadWasm, FULL_WASM, removeWasm } from '../domain/engine/fullWasm.ts';
 import { canOfferFull } from '../domain/engine/variant.ts';
-import { detectVariant } from './createEngine.ts';
+import { detectVariant, isCoarse } from './createEngine.ts';
 
 /** What the viewer needs of the deep mode (ADR-029); the tests replace it. */
 export type DeepDeps = {
@@ -19,7 +19,7 @@ export function detectDeep(): DeepDeps | undefined {
     !caches ||
     !canOfferFull({
       variant: detectVariant(),
-      coarse: window.matchMedia?.('(pointer: coarse)')?.matches ?? false,
+      coarse: isCoarse(),
       deviceMemory: (navigator as { deviceMemory?: number }).deviceMemory,
     })
   )

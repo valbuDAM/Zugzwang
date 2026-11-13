@@ -1,10 +1,11 @@
-import { Chess, castlingSide } from 'chessops/chess';
+import { Chess } from 'chessops/chess';
 import { makeFen, parseFen } from 'chessops/fen';
-import { kingCastlesTo, makeUci, parseUci, squareRank } from 'chessops/util';
+import { parseUci, squareRank } from 'chessops/util';
 import { abortError, DEFAULT_DEPTH, type Engine, type Score } from './engine/engine.ts';
+import { engineUci } from './pgn.ts';
 
 /** A position where the game is already over (mate, stalemate, insufficient material): the engine cannot analyse it. */
-export type FinalScore = { kind: 'final'; winner: 'white' | 'black' | null };
+type FinalScore = { kind: 'final'; winner: 'white' | 'black' | null };
 
 /** Evaluation from white's point of view. */
 export type WhiteScore = Score | FinalScore;
@@ -55,9 +56,7 @@ function otherMovesIfPlayed(fen: string, best: string, next: string | undefined)
   const others: string[] = [];
   for (const [from, dests] of pos.allDests()) {
     for (const to of dests) {
-      // chessops lists castling as king-takes-rook; Stockfish expects the king's real target.
-      const side = castlingSide(pos, { from, to });
-      const uci = makeUci({ from, to: side ? kingCastlesTo(pos.turn, side) : to });
+      const uci = engineUci(pos, { from, to });
       const promotes = pos.board.pawn.has(from) && (squareRank(to) === 0 || squareRank(to) === 7);
       others.push(...(promotes ? ['q', 'r', 'b', 'n'].map((p) => uci + p) : [uci]));
     }

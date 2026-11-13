@@ -79,11 +79,12 @@ test.describe('light theme', () => {
     await page.getByRole('button', { name: 'Ver la línea' }).click();
     await expectNoSeriousA11yViolations();
 
-    await page.getByRole('button', { name: 'Modo claro' }).click();
+    await page.getByRole('button', { name: 'Modo oscuro' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark'); // the choice is remembered
     await page.getByRole('button', { name: 'Modo claro' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await expectNoSeriousA11yViolations();
   });
 });

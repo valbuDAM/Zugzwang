@@ -1,13 +1,11 @@
 import { get, set } from 'idb-keyval';
 import type { PositionEval } from './analysis.ts';
+import { hex } from './engine/fullWasm.ts';
 import type { Variant } from './engine/variant.ts';
 
 type Settings = { variant: Variant; depth: number };
 
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
-}
+const sha256Hex = async (text: string) => hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
 
 // The scores depend only on the positions, so the key hashes the FENs, not the PGN (comments and clocks do not matter).
 // Bump the version when the shape of `PositionEval` or the way it is computed changes.
