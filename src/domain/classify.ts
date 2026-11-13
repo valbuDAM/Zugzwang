@@ -37,9 +37,11 @@ export const THRESHOLDS = {
 } as const;
 
 const VALUES = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9 } as const;
-const ROLES = Object.keys(VALUES) as (keyof typeof VALUES)[];
+export type Piece = keyof typeof VALUES;
+export const ROLES = Object.keys(VALUES) as Piece[];
 
-function balance(pos: Chess, color: 'white' | 'black'): number {
+/** Material of `color` minus the other side's, in pawns. */
+export function balance(pos: Chess, color: 'white' | 'black'): number {
   const count = (c: 'white' | 'black') =>
     ROLES.reduce((sum, role) => sum + VALUES[role] * pos.board.pieces(c, role).size(), 0);
   return count(color) - count(opposite(color));

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { MoveLabel } from '../domain/classify.ts';
 import type { LineStep } from '../domain/line.ts';
+import type { Reason } from '../domain/reason.ts';
 import { formatPercent } from '../i18n/format.ts';
 import { MoveBadge } from './MoveBadge.tsx';
 import './MovePanel.css';
@@ -12,6 +13,7 @@ import './MovePanel.css';
 export function MovePanel({
   label,
   drop,
+  reason,
   line,
   step,
   onStep,
@@ -19,18 +21,30 @@ export function MovePanel({
   label: MoveLabel;
   /** Win% the mover lost, 0..100. */
   drop: number;
+  /** Why the engine's move was better; said instead of the win% when there is one. */
+  reason?: Reason | undefined;
   line: LineStep[];
   step: number | null;
   onStep: (step: number | null) => void;
 }) {
   const { t } = useTranslation();
   const best = line[0];
+  const why =
+    reason &&
+    t(
+      `panel.reason.${reason.kind}`,
+      'moves' in reason ? { moves: reason.moves } : { what: t(`panel.material.${reason.piece ?? 'any'}`) },
+    );
   return (
     <section className="move-panel" aria-label={t('panel.title')}>
       <p className="move-panel-label">
         <MoveBadge label={label} />
         <strong>{t(`moveLabel.${label}`)}</strong>
-        {drop >= 0.5 && <span>{t('panel.drop', { percent: formatPercent(drop / 100, 0) })}</span>}
+        {why ? (
+          <span>{why}</span>
+        ) : (
+          drop >= 0.5 && <span>{t('panel.drop', { percent: formatPercent(drop / 100, 0) })}</span>
+        )}
       </p>
       {best && (
         <>

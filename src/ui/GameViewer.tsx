@@ -9,6 +9,7 @@ import type { Variant } from '../domain/engine/variant.ts';
 import { playLine } from '../domain/line.ts';
 import { type Book, loadBook, openingName } from '../domain/openings.ts';
 import { parseGamePgn } from '../domain/pgn.ts';
+import { moveReason } from '../domain/reason.ts';
 import { createEngine, createFullEngine, detectSettings, detectVariant } from '../engine/createEngine.ts';
 import { type DeepDeps, detectDeep } from '../engine/deep.ts';
 import { formatEval } from '../i18n/format.ts';
@@ -172,6 +173,15 @@ function Viewer({
     if (!label || !WORSE.includes(label) || !before || !from) return [];
     return playLine(from.fen, before.pv);
   }, [label, evals, positions, ply]);
+  // Why that line was better, where there is one to show.
+  const reason = useMemo(() => {
+    const before = evals?.[ply - 1];
+    const after = evals?.[ply];
+    const from = positions?.[ply - 1];
+    const uci = positions?.[ply]?.uci;
+    if (!better.length || !before || !after || !from || !uci) return undefined;
+    return moveReason(from.fen, uci, before, after);
+  }, [better, evals, positions, ply]);
   // Moving on in the game leaves the line for good, also when coming back to this move.
   if (line && line.ply !== ply) setLine(undefined);
   const step = line?.ply === ply ? line.step : null;
@@ -323,6 +333,7 @@ function Viewer({
               <MovePanel
                 label={label}
                 drop={report.drops[ply] ?? 0}
+                reason={reason}
                 line={better}
                 step={step}
                 onStep={(next) => setLine(next === null ? undefined : { ply, step: next })}

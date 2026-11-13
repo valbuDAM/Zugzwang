@@ -301,3 +301,14 @@ Formato breve: **Contexto · Decisión · Descartado · Consecuencias**. Todas s
   - El modo profundo (~100 MB por motor, ADR-029) sigue con un motor y varios hilos.
 - **Descartado:** bajar la profundidad (peor análisis); más de 4 motores (sin ganancia medida y más memoria); un motor por posición sin límite.
 - **Consecuencias:** la partida de la Ópera a profundidad 16 pasa de ~45 s a 11,3 s. Cada búsqueda de un hilo a profundidad fija es reproducible, así que la caché y los resultados no cambian. Un fallo en una calle rechaza el análisis; las otras terminan su búsqueda en curso y no informan más. Sin medir en móvil, Firefox ni WebKit.
+
+### ADR-033 · La razón de la jugada sale de las líneas del motor
+- **Contexto:** la usuaria pide que el panel diga por qué era mejor la alternativa, en vez de solo el % perdido (R8). Sin servidor ni IA.
+- **Decisión:**
+  - `moveReason` (`src/domain/reason.ts`) lee lo que ya guarda el análisis: la puntuación y la línea antes de la jugada, y las de después. Sin búsquedas nuevas ni cambio en la caché.
+  - Una sola razón, por este orden: tenías mate y ya no («tenías mate en N», también si acaba en tablas por ahogado); el rival tiene mate y antes no («te dan mate en N»); material.
+  - Material: se cuenta en el último punto de cada línea cuya jugada no captura ni corona (las capturas del final pueden ser medio cambio). Hay razón si entre lo que ganaba la mejor línea y lo que pierde la tuya hay 2 puntos o más (más de un peón), y se dice la mayor de las dos: «pierdes…» o «podías ganar…» (a igualdad, «pierdes»).
+  - Se nombra la pieza («un caballo», «la dama») si en el primer punto de la línea donde ya se llega a esos 2 puntos solo ha cambiado esa pieza; si no, «material».
+  - La razón ocupa el sitio del %; sin razón, queda el %. Solo en jugadas con «Lo mejor era». Textos de tú, elegidos por la usuaria.
+- **Descartado:** nombrar cambios compuestos («la calidad», «una pieza por dos peones»); razones posicionales; un evaluador de cambios (SEE).
+- **Consecuencias:** una línea del motor cortada justo tras una jugada intermedia tranquila puede contar medio cambio (`shortcut:` en `reason.ts`); una jugada «Buena» puede llevar «pierdes material» en posiciones ya perdidas. Sin calibrar con partidas reales.
