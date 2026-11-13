@@ -27,7 +27,17 @@ describe('parseGamePgn', () => {
   it('returns N+1 positions, the first being the starting one', () => {
     const positions = parseGamePgn(PGN);
     expect(positions).toHaveLength(6);
-    expect(positions[0]).toEqual({ fen: START, san: null, uci: null, clock: null });
+    expect(positions[0]).toEqual({ fen: START, san: null, uci: null, clock: null, mated: null });
+  });
+
+  it('records the square of the king a move checkmates, whoever it is, and of no other move', () => {
+    // No "#" on the last move: the mate is read from the position, not from the notation.
+    expect(parseGamePgn('1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7 *').map((p) => p.mated)).toEqual([
+      ...Array(7).fill(null),
+      'e8',
+    ]);
+    expect(parseGamePgn('1. f3 e5 2. g4 Qh4# *').at(-1)?.mated).toBe('e1');
+    expect(parseGamePgn('1. e4 e5 2. Qh5 Nc6 3. Qxf7+ *').at(-1)?.mated).toBeNull(); // a check, not mate
   });
 
   it('records SAN, UCI and FEN of every move', () => {

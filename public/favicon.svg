@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Zugzwang</title>
+  <!-- Felt tile with two board squares, an ivory pawn, and the brass "!!" badge of an analysed move. Colours from tokens.css. -->
+  <clipPath id="tile"><rect width="64" height="64" rx="14"/></clipPath>
+  <g clip-path="url(#tile)">
+    <rect width="64" height="64" fill="#1e4a38"/>
+    <path fill="#2b5c47" d="M0 0h32v32H0zM32 32h32v32H32z"/>
+  </g>
+  <g fill="#efe4cf">
+    <circle cx="28" cy="21" r="9.5"/>
+    <rect x="17" y="30" width="22" height="5" rx="2.5"/>
+    <path d="M22.5 34h11c0 7 3.5 10.5 8 14.5h-27c4.5-4 8-7.5 8-14.5z"/>
+    <rect x="9" y="47.5" width="38" height="9" rx="3.5"/>
+  </g>
+  <circle cx="48" cy="16" r="11" fill="#d4a84b" stroke="#1e4a38" stroke-width="2.5"/>
+  <g fill="#1c1410">
+    <path d="M42.2 9h4.2l-1.1 9.3h-2z"/>
+    <circle cx="44.3" cy="21.8" r="1.7"/>
+    <path d="M49.6 9h4.2l-1.1 9.3h-2z"/>
+    <circle cx="51.7" cy="21.8" r="1.7"/>
+  </g>
+</svg>
